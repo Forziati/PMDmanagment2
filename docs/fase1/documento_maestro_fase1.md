@@ -1,6 +1,6 @@
 # Plataforma de Control Histórico de Contratos (PMO) · Documento Maestro de Fase 1
 
-**Versión 1.0 (propuesta de cierre de Fase 1)** · 02-oct-2026
+**Versión 1.1 (propuesta de cierre de Fase 1)** · 02-oct-2026
 Alcance: aeropuerto GDL · Fuente única: Excel **Performance** (GAPINFRA-F-074)
 Base de evidencia: 3 cortes de Performance (16, 23 y 30-sep-2026) y 1 informe OPR (referencia).
 Documento hermano: `diccionario_datos_metricas.md` (detalle campo por campo, reglas de calidad y registro de decisiones D-01 a D-11).
@@ -56,7 +56,7 @@ Se pasa de "el estado de hoy, que se sobrescribe" a "la trayectoria de cada cont
 | Pregunta original | ¿La responde la v1? | Con qué |
 |---|---|---|
 | ¿Qué contrato empeoró esta semana? | Sí | Comparador de cortes |
-| ¿Qué proveedor ha venido deteriorando su desempeño? | Sí, con reservas | SPI, %OENE y desviación por proveedor. Con 26 proveedores reales para 31 contratos, la mayoría tiene un solo contrato: la señal es débil hasta tener más historia o más aeropuertos |
+| ¿Qué proveedor ha venido deteriorando su desempeño? | Sí | SPI, %OENE y desviación por proveedor, con su serie histórica completa. Con 26 proveedores reales para 31 contratos, la mayoría tiene un solo contrato, por lo que cada posición muestra su nivel de confianza |
 | ¿Cómo evolucionó la OENE en los últimos meses? | Sí | Serie semanal desde la carga histórica de 2026 |
 | ¿Qué contratos están sistemáticamente atrasados? | Sí | SPI persistente bajo umbral y corrimientos de Fin Previsto |
 | ¿Qué responsable tiene más contratos críticos? | Sí | Con asignación vigente por periodo |
@@ -120,14 +120,14 @@ Se pasa de "el estado de hoy, que se sobrescribe" a "la trayectoria de cada cont
 ### 4.2 Volumen: el crecimiento no es el problema
 GDL tiene 34 filas por semana y ≈ 130 columnas. Un año completo son ≈ 1,800 filas de contrato. **El desempeño técnico no es un riesgo en esta etapa**; los riesgos son de calidad de datos, identidad y adopción. Esto justifica no sobredimensionar la infraestructura y priorizar el modelo y las reglas.
 
-### 4.3 Decisión de construcción **[Decisión pendiente D-12]**
+### 4.3 Decisión de construcción **[Resuelta: D-12 = opción B, híbrido]**
 | Opción | Qué implica | Valoración |
 |---|---|---|
 | A. Todo propio | Máximo control, máximo mantenimiento | No recomendada: el volumen no la justifica |
 | **B. Híbrido** | Almacén y capa semántica propios. Módulos a medida donde está el valor (Cargas y Calidad, Qué Cambió, Contrato 360). Herramienta BI existente para exploración libre, sobre la misma capa semántica | **Recomendada** |
 | C. Todo en herramienta BI | Arranque rápido | El motor de cambios, la resolución de identidad y la aprobación de estatus no caben bien y la lógica volvería a dispersarse |
 
-Decisión necesaria: ¿existe una herramienta BI corporativa y hay licencias? De eso depende la opción B.
+**Decidido (D-12):** plataforma propia con herramienta BI complementaria (opción B). Queda por elegir **cuál** herramienta BI (D-12b); la capa semántica propia debe poder exponerse a la herramienta elegida sin duplicar cálculos.
 
 ---
 
@@ -348,9 +348,18 @@ Definiciones oficiales y umbrales: ver `diccionario_datos_metricas.md` §6.
 | **Base (del Excel)** | Presupuesto base y contratado, convenios, ODC potencial, PV, EV, Estimado, Facturado, OENE contratada y por regularizar, estimaciones en revisión, fechas (AIR, fin original, conveniado, previsto), anticipo |
 | **Derivadas (las recalcula la plataforma)** | SPI (ΣEV/ΣPV), **Índice de Estimación** (ΣE/ΣEV), % de avance programado, ganado y estimado, OENE $ y %, desviación $ y %, % de cambios por convenios, días para fin, % de tiempo transcurrido, % de incremento de plazo, corrimientos de Fin Previsto |
 | **Tendencia** | Variación semanal, media móvil, semanas consecutivas de deterioro, aceleración |
-| **Ejecutivas** | Salud del programa (semáforo con los umbrales del instructivo), SPI del programa, valor contratado en contratos críticos, número de contratos críticos y su cambio, OENE y su tendencia, crecimiento del presupuesto contra el base, contratos por vencer sin cierre, concentración por proveedor |
+| **Ejecutivas** | Salud del programa (semáforo según la regla D-13, abajo), SPI del programa, valor contratado en contratos críticos, número de contratos críticos y su cambio, OENE y su tendencia, crecimiento del presupuesto contra el base, contratos por vencer sin cierre, concentración por proveedor |
 
 **Contrato crítico (D-05):** SPI < 0.90, o % OENE ≥ 10 %, o KPI de plazo en crítico.
+
+**Salud del programa (D-13):** se calcula solo sobre contratos **ACTIVO** (los terminados diluyen el resultado) y toma el **peor color** de dos componentes, con los umbrales ya establecidos en el instructivo:
+
+| Componente | Verde | Ámbar | Rojo |
+|---|---|---|---|
+| Desviación del programa = (ΣEV − ΣPV) / ΣPV | ≥ −5 % | entre −10 % y −5 % | ≤ −10 % |
+| % OENE del programa = ΣOENE / Σtotal contratado | ≤ 5 % | > 5 % y < 10 % | ≥ 10 % |
+
+Además se muestran, sin colorear, el número de contratos críticos y el valor contratado que representan. Aplicada a los tres cortes de septiembre: 16-sep desviación −8.1 % y OENE 5.27 % → **ámbar**; 23-sep −8.9 % y 4.65 % → **ámbar**; 30-sep −5.7 % y 3.66 % → **ámbar**, con mejora sostenida. El 23-sep tenía 17 contratos activos en lugar de 19 por el cambio de estatus de dos contratos: el cambio de composición se muestra aparte.
 
 **Cuidados de interpretación**
 - El SPI de un contrato recién iniciado es ruido; se señala cuando hay pocas semanas de avance.
@@ -364,13 +373,15 @@ Definiciones oficiales y umbrales: ver `diccionario_datos_metricas.md` §6.
 
 ## 10. Ranking de contratistas (conceptual)
 
-**Realidad de los datos:** en GDL hay 31 contratos con OC y 26 proveedores reales; 22 tienen un solo contrato y solo uno tiene tres. **Con este tamaño, un ranking por proveedor tiene poca base estadística.** Y como el OPR queda fuera, no habrá causas de no cumplimiento para distinguir culpa del contratista de causas externas.
+**Decisión de la PMO (D-14): aparecen todos los contratistas y todo ranking muestra su serie histórica.** No hay mínimo de contratos o semanas para figurar.
+
+**Realidad de los datos:** en GDL hay 31 contratos con OC y 26 proveedores reales; 22 tienen un solo contrato y solo uno tiene tres. Un proveedor con un solo contrato joven puede subir o bajar mucho por azar, así que la plataforma compensa **mostrando**, no ocultando: cada posición lleva un indicador de confianza y su tendencia histórica. Como el OPR queda fuera, tampoco hay causas de no cumplimiento para separar lo atribuible al contratista de lo externo.
 
 **Propuesta:**
 1. **V1: ranking a nivel de contrato**, por segmento comparable (Nivel I × Nivel II: construcción frente a diseño, edificación frente a campo de vuelo), con SPI, % OENE, desviación, corrimientos de fecha y crecimiento por convenios.
-2. **Vista por proveedor descriptiva**: cartera, valor contratado, tendencia y número de contratos críticos. **Sin posición numérica** mientras tenga menos de N contratos observados (N a definir; sugiero 3 con 12 semanas de historia).
+2. **Vista por proveedor**: **todos los contratistas, con posición**, cartera, valor contratado, número de contratos críticos y **serie histórica** de SPI, % OENE y desviación. Los de poca base llevan la etiqueta "confianza baja" (menos de 3 contratos o menos de 12 semanas de historia) y se pueden ordenar o filtrar, pero **nunca se excluyen**.
 3. **Sin score único opaco**: cuatro o cinco dimensiones visibles; un compuesto opcional, ajustable y desglosable.
-4. **Evitar sesgos**: exposición mínima, indicador de confianza en cada posición, ajuste por madurez (los contratos jóvenes pesan menos), suavizado estadístico para que pocos datos no den extremos, y doble vista ponderada por valor y por conteo para que un contrato gigante no domine.
+4. **Evitar sesgos sin esconder a nadie**: indicador de confianza en cada posición, ajuste por madurez (los contratos jóvenes pesan menos), indicadores sobre ventanas de varias semanas y no sobre una sola, suavizado estadístico para que pocos datos no den extremos, y doble vista ponderada por valor y por conteo para que un contrato gigante no domine.
 5. **Tendencias**: trayectoria de las últimas N semanas y alerta por deterioro sostenido, no por una mala semana.
 6. **Gobierno**: pesos y reglas son parámetros versionados y revisados en comité, no decisión de desarrollo.
 7. Cuando exista el campo de causa (hoy solo en el OPR), se excluirá del puntaje únicamente la causa LA (liberación de áreas por el aeropuerto), según la decisión D-04.
@@ -456,7 +467,7 @@ Panel de conteos, lista priorizada con causa, vista agrupada por proveedor, proy
 
 | Fase | Contenido | Criterio de salida |
 |---|---|---|
-| **1. Arquitectura** (esta) | Documento maestro, diccionario, decisiones D-01 a D-12 y prueba de la regla del jueves y la deriva de plantilla con 3 a 4 cortes más | Documentos firmados por la PMO y la Dirección; D-12 resuelta |
+| **1. Arquitectura** (esta) | Documento maestro, diccionario, decisiones D-01 a D-12 y prueba de la regla del jueves y la deriva de plantilla con 3 a 4 cortes más | Documentos firmados por la PMO y la Dirección; D-12b y D-15 a D-17 resueltas |
 | **2. Datos** | Modelo conformado definitivo, maestros y alias, catálogo de reglas, mapa de versiones de plantilla, **carga retroactiva de los Performance de 2026** (≈ 39 cortes, etiquetada "reconstruida") | Los cortes históricos cargados concilian con lo que la PMO reportó en su momento; cifras de control firmadas |
 | **3. Backend** | Pipeline de carga con validación, aprobación e idempotencia; capa semántica; motor de cambios; seguridad y auditoría | Una carga completa de punta a punta; pruebas de regresión con cortes reales |
 | **4. Frontend** | Orden: Cargas y Calidad → Resumen → Qué Cambió → Contrato 360 → Portafolio → Proveedores → Tendencias | La PMO prepara la junta semanal desde la plataforma sin abrir el Excel para analizar |
@@ -498,13 +509,22 @@ Panel de conteos, lista priorizada con causa, vista agrupada por proveedor, proy
 | D-09 | Las deductivas negativas en convenios son legítimas |
 | D-10 | Los umbrales de semáforo son los del instructivo |
 | D-11 | El PPC queda fuera de alcance |
+| D-12 | Plataforma propia con herramienta BI complementaria (híbrido) |
+| D-13 | Semáforo de salud del programa: peor color entre desviación y % OENE de contratos ACTIVO |
+| D-14 | Aparecen todos los contratistas y todo ranking muestra su serie histórica |
 
-### 15.2 Pendientes para cerrar la Fase 1
+### 15.2 Resueltas el 02-oct-2026 y pendientes para cerrar la Fase 1
+
+| ID | Estado | Resolución |
+|---|---|---|
+| D-12 | Resuelta | Plataforma propia con herramienta BI complementaria (opción B) |
+| D-13 | Resuelta | Regla de salud del programa de la sección 9 |
+| D-14 | Resuelta | Aparecen todos los contratistas y todo ranking muestra su serie histórica |
+
+Pendientes:
 | ID | Decisión | Quién |
 |---|---|---|
-| **D-12** | Construcción propia, híbrida con herramienta BI, o solo BI (recomendado: híbrido) | Dirección + TI |
-| D-13 | Regla de agregación del semáforo de salud del programa a un único color (los umbrales ya existen) | PMO |
-| D-14 | Mínimo de contratos y semanas para publicar posición de un proveedor | PMO |
+| D-12b | Qué herramienta BI se usa como complemento y quién la licencia | Dirección + TI |
 | D-15 | Dueño del diccionario de métricas y quién aprueba cambios de definición | Dirección |
 | D-16 | Calendario de cambios a la plantilla (sección 14) | PMO |
 | D-17 | Quién consume la plataforma y con qué roles y alcance por fila | Dirección + PMO |
@@ -518,7 +538,7 @@ Panel de conteos, lista priorizada con causa, vista agrupada por proveedor, proy
 ## 16. Criterios de aceptación de la Fase 1
 
 1. La PMO valida el diccionario y los umbrales.
-2. D-12 a D-17 tienen respuesta o fecha.
+2. D-12b y D-15 a D-17 tienen respuesta o fecha.
 3. La regla del jueves se confirma con cortes adicionales.
 4. Se acuerda el plan de corrección de la plantilla y quién lo ejecuta.
 5. Se confirma la lista de usuarios y roles de la primera versión.

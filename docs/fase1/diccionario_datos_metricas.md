@@ -1,6 +1,6 @@
 # Fase 1 · Diccionario de datos y de métricas
 
-Estado: **borrador v0.4 para validación de la PMO** (incorpora las decisiones de la sección 9) · Alcance inicial: aeropuerto GDL · Base de análisis: 3 cortes de Performance (16, 23 y 30-sep-2026) y 1 OPR (contrato GDLC25-027, OC GDL-OC-0007238).
+Estado: **borrador v0.5 para validación de la PMO** (incorpora las decisiones de la sección 9) · Alcance inicial: aeropuerto GDL · Base de análisis: 3 cortes de Performance (16, 23 y 30-sep-2026) y 1 OPR (contrato GDLC25-027, OC GDL-OC-0007238).
 
 Este documento no contiene código, SQL ni diseño de pantallas. Define **qué es cada dato, de dónde viene, cómo se valida y cómo lo trata la plataforma**.
 
@@ -314,7 +314,7 @@ Las fórmulas son **definiciones conceptuales** para acordar con la PMO; aún no
 | **PPC** | Fuera de alcance (D-11) | — | No se calcula ni se muestra |
 | **Causas de no cumplimiento** | Conteo por clave CNC y por periodo (excluye LA del puntaje) | Suma | Solo cuando se cargue el OPR |
 | **Contratos críticos** | Contratos con SPI < 0.90 **o** % OENE ≥ 10 % **o** KPI de plazo en crítico | Conteo y valor contratado | **Aprobado (D-05)** |
-| **Salud del programa** | Se aplican los **umbrales ya establecidos por la PMO** (instructivo del formato, §6 y apartado "Indicadores críticos") sobre las sumas del programa: ΣEV/ΣPV, %OENE total, % de contratos críticos y valor contratado en riesgo | Programa | Definidos (D-10); falta solo fijar cómo se agregan a un único color |
+| **Salud del programa** | Peor color entre (a) desviación del programa = (ΣEV − ΣPV)/ΣPV y (b) %OENE = ΣOENE/Σtotal contratado, sobre contratos ACTIVO, con los umbrales del instructivo | Programa | **Definida (D-13)**: verde si desviación ≥ −5 % y OENE ≤ 5 %; rojo si desviación ≤ −10 % o OENE ≥ 10 %; ámbar en los demás casos. Se muestran además los contratos críticos y su valor, sin colorear |
 
 ---
 
@@ -340,7 +340,7 @@ Respuestas de la PMO del 02-oct-2026:
 | P-03 | Cerrada | Los OPR de 2026 existen pero no se usarán |
 | P-04 | Cerrada | La semana cierra en jueves |
 | P-05 | Cerrada | La mayoría de las causas es del contratista; solo LA es externa |
-| P-06 | Cerrada | Reglas ya establecidas en el instructivo del formato |
+| P-06 | Cerrada | Reglas ya establecidas en el instructivo; agregación definida en D-13 |
 | P-07 | Cerrada | Holgura viene de MS Project y la captura una persona en Performance |
 | P-08 | Cerrada | Todos los OPR usan la misma plantilla (irrelevante por D-01) |
 | P-09 | Cerrada | No aplica |
@@ -380,3 +380,6 @@ Respuestas de la PMO del 02-oct-2026:
 | D-09 | Las deductivas negativas en convenios son legítimas | 02-oct-2026 | Sin alerta por signo negativo |
 | D-10 | Los umbrales de semáforo son los ya establecidos en el instructivo del formato | 02-oct-2026 | Se incorporan al catálogo de reglas |
 | D-11 | El PPC queda fuera de alcance por ahora | 02-oct-2026 | Sin KPI, regla ni pantalla de PPC; la columna se conserva sin interpretar |
+| D-12 | Plataforma propia con herramienta BI complementaria (híbrido); falta elegir la herramienta (D-12b) | 02-oct-2026 | Capa semántica propia, expuesta a la herramienta BI |
+| D-13 | Salud del programa = peor color entre desviación y %OENE de contratos ACTIVO | 02-oct-2026 | Regla de semáforo ejecutivo |
+| D-14 | Aparecen todos los contratistas y todo ranking muestra su serie histórica; sin mínimo para figurar | 02-oct-2026 | Se muestra confianza baja en lugar de ocultar |

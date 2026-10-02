@@ -467,7 +467,7 @@ Panel de conteos, lista priorizada con causa, vista agrupada por proveedor, proy
 
 | Fase | Contenido | Criterio de salida |
 |---|---|---|
-| **1. Arquitectura** (esta) | Documento maestro, diccionario, decisiones D-01 a D-12 y prueba de la regla del jueves y la deriva de plantilla con 3 a 4 cortes más | Documentos firmados por la PMO y la Dirección; D-12b y D-15 a D-17 resueltas |
+| **1. Arquitectura** (esta) | Documento maestro, diccionario, decisiones D-01 a D-14 y prueba de la regla del jueves y la deriva de plantilla con 3 a 4 cortes más | Documentos firmados por la PMO y la Dirección; D-12b y D-15 a D-17 resueltas |
 | **2. Datos** | Modelo conformado definitivo, maestros y alias, catálogo de reglas, mapa de versiones de plantilla, **carga retroactiva de los Performance de 2026** (≈ 39 cortes, etiquetada "reconstruida") | Los cortes históricos cargados concilian con lo que la PMO reportó en su momento; cifras de control firmadas |
 | **3. Backend** | Pipeline de carga con validación, aprobación e idempotencia; capa semántica; motor de cambios; seguridad y auditoría | Una carga completa de punta a punta; pruebas de regresión con cortes reales |
 | **4. Frontend** | Orden: Cargas y Calidad → Resumen → Qué Cambió → Contrato 360 → Portafolio → Proveedores → Tendencias | La PMO prepara la junta semanal desde la plataforma sin abrir el Excel para analizar |

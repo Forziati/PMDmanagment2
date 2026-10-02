@@ -1,8 +1,8 @@
 # Plataforma de Control Histórico de Contratos (PMO) · Documento Maestro de Fase 1
 
-**Versión 1.1 (propuesta de cierre de Fase 1)** · 02-oct-2026
+**Versión 1.2 (propuesta de cierre de Fase 1)** · 02-oct-2026
 Alcance: aeropuerto GDL · Fuente única: Excel **Performance** (GAPINFRA-F-074)
-Base de evidencia: 3 cortes de Performance (16, 23 y 30-sep-2026) y 1 informe OPR (referencia).
+Base de evidencia: **6 cortes de Performance** (27-may, 10-jun, 09-sep, 16-sep, 23-sep y 30-sep-2026) y 1 informe OPR (referencia).
 Documento hermano: `diccionario_datos_metricas.md` (detalle campo por campo, reglas de calidad y registro de decisiones D-01 a D-11).
 
 > Este documento no contiene código, SQL, APIs ni componentes. Define qué se construye, por qué y en qué orden. Los puntos marcados **[Decisión pendiente]** requieren respuesta antes de la Fase 2.
@@ -23,8 +23,9 @@ Documento hermano: `diccionario_datos_metricas.md` (detalle campo por campo, reg
 4. Los KPI de plazo del Excel dependen de la fecha en que se abre el archivo (`HOY()`) y marcan como "vencidos" a contratos terminados.
 5. La plantilla **cambia entre semanas** (el 16-sep traía dos columnas extra que desplazaron todas las demás).
 6. El archivo del miércoles reporta la semana que **cierra el jueves siguiente**.
+7. Con 6 cortes de mayo a septiembre aparecieron **tres versiones de plantilla**, **17 líneas en PLANEACIÓN que desaparecieron sin explicación** y una curva mensual que se **reescribe** de un mes a otro.
 
-**Alcance de la primera versión.** Cargas con validación y aprobación, historia semanal, comparativo entre cortes, resumen ejecutivo, ficha de contrato, vista por proveedor y portafolio. Quedan fuera: OPR, PPC, riesgos, causas de no cumplimiento y fianzas.
+**Alcance de la primera versión.** Cargas con validación, historia semanal, comparativo entre cortes, resumen ejecutivo, ficha de contrato, vista por proveedor y portafolio. **Modelo de acceso simple: una persona carga el Excel y cualquiera con el enlace consulta la información** (sin cuentas, roles ni permisos por fila). Quedan fuera: OPR, PPC, riesgos, causas de no cumplimiento y fianzas.
 
 ---
 
@@ -43,7 +44,7 @@ Se pasa de "el estado de hoy, que se sobrescribe" a "la trayectoria de cada cont
 | KPI con lógica equivocada | ACTIVO = "SIN INICIAR" aunque está en ejecución; el "CPI" documentado al revés |
 | Sin control de cambios | Estatus que retrocede, días negativos (−177), convenios que cambian sin pasar por la hoja de ODC |
 | Sin validación estructural | Columnas extra que desplazan el resto |
-| Sin seguridad por filas ni auditoría | Macros, vínculos externos, archivos que circulan por correo y repositorio |
+| Sin trazabilidad de quién cargó qué | Macros, vínculos externos, archivos que circulan por correo y repositorio |
 
 ### 1.3 Beneficios esperados
 1. Una sola fuente de verdad con historia completa.
@@ -74,19 +75,21 @@ Se pasa de "el estado de hoy, que se sobrescribe" a "la trayectoria de cada cont
 | Montos, plazos y KPI recalculados por la plataforma | Riesgos, actividades en riesgo, fianzas |
 | Curva mensual (real y programado) con etiqueta "no conciliado" | Causas de no cumplimiento y ranking causal |
 | Historia 2026 (carga retroactiva) | Conciliación contra el origen de los datos |
-| Aprobación de cambios de estatus por la PMO | Hojas ODC y Facturas del Excel (no alimentan nada) |
+| Confirmación con motivo de los cambios de estatus por quien carga | Hojas ODC y Facturas del Excel (no alimentan nada) |
 | Diseño listo para más aeropuertos | Otros aeropuertos (hoy solo GDL) |
 
 ---
 
-## 3. Usuarios y casos de uso
+## 3. Perfiles de uso y casos de uso
 
-| Rol | Preguntas clave | Qué consulta |
+> Son **perfiles de interés**, no roles del sistema: la plataforma no tiene cuentas, roles ni permisos; cualquiera con el enlace ve lo mismo y filtra según lo que le interese.
+
+| Perfil | Preguntas clave | Qué consulta |
 |---|---|---|
 | **Director** | ¿El programa está sano? ¿Qué requiere mi decisión? ¿Qué cambió esta semana? | Resumen ejecutivo de 2 minutos: salud, KPI clave, contratos críticos, cambios de la semana, tendencia de 12 a 26 semanas |
 | **Dirección de Infraestructura** | ¿Qué proyecto está peor? ¿Dónde se concentra el riesgo financiero? ¿Qué proveedores sostienen el programa? | Portafolio por proyecto y nivel WBS, concentración por proveedor, valor contratado en contratos críticos |
-| **PMO** (usuario más intensivo) | ¿Qué cambió entre cortes? ¿La carga está limpia? ¿Qué contratos son crónicos? ¿Qué estatus pido aprobar? | Cargas y calidad, comparador, tendencias, maestros, aprobaciones |
-| **Responsable de proyecto** | ¿Cómo van mis contratos? ¿Qué se me desvió? | Sus contratos, su historia y sus alertas |
+| **PMO** (quien carga y revisa) | ¿Qué cambió entre cortes? ¿La carga está limpia? ¿Qué contratos son crónicos? ¿Qué estatus confirmo? | Cargas y calidad, comparador, tendencias, maestros |
+| **Responsable de proyecto** | ¿Cómo van mis contratos? ¿Qué se me desvió? | Sus contratos (filtrando por su nombre), su historia y sus alertas |
 | **Supervisor** | ¿Cuál es el avance real contra lo programado? ¿Qué fecha de término es realista? | Detalle por contrato: PV, EV, SPI, fechas |
 | **Contratos** | ¿Cuánto han crecido los contratos por convenios? ¿Cuánto hay por regularizar? ¿Qué vence pronto? | Convenios acumulados, OENE contratada y por regularizar, fechas, vigencias |
 
@@ -103,16 +106,16 @@ Se pasa de "el estado de hoy, que se sobrescribe" a "la trayectoria de cada cont
 │ semanal      │  │ Validación     │  │    (maestros+hechos)  │  │ cambios        │  │ Contrato 360 │
 │ (humano)     │  │ Resolución de  │  │ 3. Derivados          │  │ Umbrales y     │  │ Proveedores  │
 │              │  │ identidad      │  │    (cambios, series)  │  │ alertas        │  │ Portafolio   │
-│              │  │ Aprobación PMO │  │                       │  │                │  │ Cargas/Cal.  │
+│              │  │ Confirmación   │  │                       │  │                │  │ Cargas/Cal.  │
 └──────────────┘  └────────────────┘  └───────────────────────┘  └────────────────┘  └──────────────┘
-                              Gobierno transversal: seguridad por filas · auditoría · catálogo
+                              Transversal: acceso por enlace · registro de cargas · catálogo
 ```
 
 ### 4.1 Responsabilidades
 | Capa | Responsabilidad | Regla de oro |
 |---|---|---|
 | **Fuente** | El Excel Performance, con huella de plantilla | La plataforma no corrige el Excel: lo rechaza, lo observa o lo acepta con justificación |
-| **Ingesta** | Leer sin ejecutar macros ni actualizar vínculos; localizar la tabla por nombre; mapear por encabezado; derivar el corte (jueves); validar; resolver identidades; pedir aprobación | Es **idempotente**: cargar dos veces el mismo archivo no cambia nada |
+| **Ingesta** | Leer sin ejecutar macros ni actualizar vínculos; localizar la tabla por nombre; mapear por encabezado y por versión de plantilla; derivar el corte (jueves); validar; resolver identidades; pedir confirmación con motivo | Es **idempotente**: cargar dos veces el mismo archivo no cambia nada |
 | **Almacén histórico** | Crudo inmutable (permite reprocesar años después), conformado (maestros y hechos limpios), derivados (cambios entre cortes y series) | Nunca se sobrescribe; solo se añade |
 | **Capa semántica** | Define una sola vez cada KPI, umbral y alerta; recalcula todo desde medidas base | **La lógica de negocio no vive en las pantallas** |
 | **Experiencia** | Muestra y navega; no calcula | Cualquier número en pantalla tiene su definición a un clic |
@@ -127,7 +130,23 @@ GDL tiene 34 filas por semana y ≈ 130 columnas. Un año completo son ≈ 1,800
 | **B. Híbrido** | Almacén y capa semántica propios. Módulos a medida donde está el valor (Cargas y Calidad, Qué Cambió, Contrato 360). Herramienta BI existente para exploración libre, sobre la misma capa semántica | **Recomendada** |
 | C. Todo en herramienta BI | Arranque rápido | El motor de cambios, la resolución de identidad y la aprobación de estatus no caben bien y la lógica volvería a dispersarse |
 
-**Decidido (D-12):** plataforma propia con herramienta BI complementaria (opción B). Queda por elegir **cuál** herramienta BI (D-12b); la capa semántica propia debe poder exponerse a la herramienta elegida sin duplicar cálculos.
+**Decidido (D-12):** plataforma propia con herramienta BI complementaria (opción B). La capa semántica propia se expone a la herramienta BI sin duplicar cálculos.
+
+**Herramienta BI propuesta (D-12b): Metabase Open Source.** Criterios: gratuita, vigente, y que **un enlace de solo lectura permita ver tableros sin cuenta**, que es el modelo de acceso pedido.
+
+| Opción | Costo | Acceso por enlace sin cuenta | Valoración |
+|---|---|---|---|
+| **Metabase OSS** | Gratis (licencia AGPL-3.0); se aloja por cuenta propia; usuarios y tableros ilimitados | **Sí**: el administrador crea un enlace público de solo lectura por tablero o pregunta | **Recomendada**: la más simple para quien no es técnico y encaja con el acceso por enlace |
+| Apache Superset | Gratis (Apache 2.0) | Posible con un rol Público configurado y pruebas de permisos | Más potente en SQL, pero la configuración del acceso anónimo es más delicada |
+| Looker Studio | Gratis (servicio de Google) | Sí, compartiendo con enlace | Requiere que los datos estén en el ecosistema de Google; no es autoalojable |
+| Power BI | Desktop gratis, pero compartir exige licencias | No sin licencia | Descartada por el modelo de acceso |
+
+Contras de Metabase a tener presentes: soporte solo de la comunidad, mantenimiento y actualizaciones a cargo del equipo, y el embebido lleva marca "Powered by Metabase" (no afecta a los enlaces públicos). Fuentes: [Metabase Pricing 2026](https://www.luzmo.com/blog/metabase-pricing), [BI tools for sharing dashboards externally (2026)](https://www.basedash.com/blog/best-bi-tools-for-sharing-dashboards-externally-2026), [Superset: acceso anónimo](https://superset.apache.org/docs/security/).
+
+### 4.4 Modelo de acceso (D-15)
+- **Carga**: una sola persona sube el Excel. La pantalla de carga se protege con una credencial simple compartida por quien carga; la plataforma registra fecha, archivo y huella de cada carga.
+- **Consulta**: cualquiera con el enlace ve los tableros publicados. No hay cuentas, roles, permisos por fila ni notificaciones por responsable.
+- **Consecuencia aceptada**: los datos (montos contractuales y nombres de responsables y proveedores) son visibles para cualquiera que tenga el enlace. Mitigaciones sin añadir roles: enlace no adivinable, posibilidad de **revocar y regenerar** el enlace, y no publicar el enlace en canales abiertos.
 
 ---
 
@@ -135,7 +154,7 @@ GDL tiene 34 filas por semana y ≈ 130 columnas. Un año completo son ≈ 1,800
 
 | # | Módulo | Función | Versión |
 |---|---|---|---|
-| 1 | **Cargas y Calidad** | Subir el Excel, ver resultado de validación, justificar advertencias, aprobar cambios de estatus, publicar el corte | MVP |
+| 1 | **Cargas y Calidad** | Subir el Excel, ver resultado de validación, justificar advertencias, confirmar con motivo los cambios de estatus, publicar el corte | MVP |
 | 2 | **Resumen Ejecutivo** | Salud del programa, KPI clave, contratos críticos, "qué cambió", tendencia | MVP |
 | 3 | **Qué Cambió** (comparador de cortes) | Núcleo del sistema: clasifica y explica cada cambio entre dos cortes | MVP |
 | 4 | **Contrato 360** | Ficha con financiero, plazo, desempeño, historia semana a semana y eventos | MVP |
@@ -143,7 +162,7 @@ GDL tiene 34 filas por semana y ≈ 130 columnas. Un año completo son ≈ 1,800
 | 6 | **Proveedores** | Cartera, tendencia y concentración. Ranking **descriptivo** (sección 9) | MVP |
 | 7 | **Tendencias** | Series de tiempo libres y comparación de periodos | MVP (básico) |
 | 8 | **Maestros** | Contratos, proveedores, responsables, alias, fusiones y vigencias | MVP |
-| 9 | **Administración** | Usuarios, roles, seguridad por filas, umbrales, auditoría | MVP |
+| 9 | **Parámetros** | Umbrales, catálogos y revocación o regeneración del enlace público | MVP |
 | 10 | **Flujo mensual** | Curva real y programada por mes, con etiqueta "no conciliado" | Posterior |
 | 11 | **Responsables** | Carga y condición de contratos por persona (uso de gestión, no disciplinario) | Posterior |
 | 12 | **Reportes** | Paquete semanal para la junta (PDF o diapositivas) | Posterior |
@@ -175,11 +194,11 @@ GDL tiene 34 filas por semana y ≈ 130 columnas. Un año completo son ≈ 1,800
 - **Catálogos**: estatus (PLANEACIÓN, ACTIVO = en ejecución, TERMINADO), tipo de presupuesto, niveles WBS.
 
 **Hechos (crecen sin parar):**
-- **Carga**: archivo, huella, versión de plantilla, quién, cuándo, resultado, estado.
+- **Carga**: archivo, huella, versión de plantilla, cuándo, resultado, estado.
 - **Corte**: semana PMO; estado (abierto, cerrado, reabierto); apunta a la carga vigente.
 - **Foto semanal del contrato**: una fila por contrato y corte con medidas base (presupuesto base y contratado, convenios, ODC potencial, PV, EV, Estimado, Facturado, OENE contratada y por regularizar, fechas, estatus, responsables).
 - **Curva mensual**: monto por contrato, mes y corte, con tipo (real, parcial, programado).
-- **Aprobación de estatus**: cambio solicitado, aprobador, motivo y fecha.
+- **Confirmación de estatus**: cambio detectado, motivo escrito por quien carga y fecha.
 - **Resultado de calidad**: regla, severidad, contrato afectado y decisión tomada.
 - **Nota**: comentario de la PMO ligado a contrato y corte.
 
@@ -223,29 +242,29 @@ Corte A ─ Corte B  ⇒  Cambio por contrato
 ## 7. Diseño funcional
 
 ### 7.1 Flujo de carga
-1. **Recepción**: la PMO sube el archivo. Se registra quién, cuándo y la huella.
+1. **Recepción**: quien carga sube el archivo. Se registra cuándo y la huella.
 2. **Lectura segura**: sin ejecutar macros ni actualizar vínculos externos; la tabla se localiza por su nombre y las columnas por encabezado normalizado. Las filas plantilla, los totales de la fila 2 y el bloque de cálculos inferior se ignoran.
 3. **Detección de plantilla**: se compara el conjunto de encabezados con las versiones conocidas. Columnas desconocidas van a un área "no mapeada" y generan advertencia; no bloquean.
 4. **Corte**: se deriva el jueves de cierre a partir de la fecha de entrega (el miércoles reporta la semana que cierra el jueves siguiente) y el usuario lo confirma. Entrega después del jueves de cierre: "entrega tardía", confirmación manual.
 5. **Validación por niveles** (detalle en el diccionario): estructural, integridad, reglas de negocio, consistencia contra el corte anterior y recálculo contra los valores reportados.
 6. **Revisión**: la PMO ve hallazgos clasificados en **bloqueantes**, **advertencias** (se aceptan con justificación escrita) e **informativos**.
-7. **Aprobaciones**: todo cambio de estatus se somete a aprobación. Pasar de TERMINADO a ACTIVO exige además un motivo.
+7. **Confirmaciones**: todo cambio de estatus exige confirmación escrita con motivo de quien carga; pasar de TERMINADO a ACTIVO se marca además como reversión.
 8. **Resolución de identidad**: contratos, proveedores o personas nuevos o desconocidos pasan a una cola de revisión.
-9. **Publicación**: se escriben los hechos conformados, se calculan los derivados y el corte se marca como cerrado. Un corte en revisión es invisible para los usuarios de negocio.
-10. **Notificación**: aviso a responsables con los cambios que afectan a sus contratos.
+9. **Publicación**: se escriben los hechos conformados, se calculan los derivados y el corte se marca como cerrado. Un corte en revisión no es visible en el enlace público.
+10. **Aviso en pantalla**: resumen de los cambios de la semana en el Resumen Ejecutivo (sin envío de correos por responsable).
 
 ### 7.2 Políticas
 | Situación | Política propuesta |
 |---|---|
 | Semana sin carga | Se marca "sin dato"; no se copia ni se interpola |
-| Reapertura de un corte cerrado | Requiere rol, motivo y notificación; se recalcula todo lo posterior |
+| Reapertura de un corte cerrado | Requiere motivo escrito; se recalcula todo lo posterior |
 | Carga retroactiva 2026 | Se carga como histórico, etiquetada "reconstruido", con mapa por versión de plantilla |
 | Contrato que desaparece | No se interpreta como terminado; genera alerta de calidad |
 | Entrega tardía | Marcada; la PMO decide a qué corte pertenece |
 | Valor pegado vs fórmula | Se guarda la procedencia; un cambio de procedencia entre cortes genera aviso informativo |
 
 ### 7.3 Consulta y análisis
-Los usuarios solo ven cortes publicados. Todo número muestra tendencia y variación contra el corte anterior, y su definición está a un clic.
+Quien consulta solo ve cortes publicados. Todo número muestra tendencia y variación contra el corte anterior, y su definición está a un clic.
 
 ---
 
@@ -399,7 +418,7 @@ Compara dos cortes cualesquiera (por defecto el último contra el anterior), **c
 | **Nuevo** | Existe en B, no en A, y no es alias de otro | Distinguir alta real de reaparición |
 | **Salió** | Existe en A, no en B | **No asumir cierre**: cerrado formalmente, renombrado, o desaparecido sin explicación (alerta de calidad) |
 | **Cambio estructural** | Alias, división, fusión; cambio de proveedor, proyecto o responsable | Evita que un cambio de identidad parezca mejora o deterioro |
-| **Reversión de estatus** | TERMINADO → ACTIVO, o PLANEACIÓN → TERMINADO | Va a aprobación de la PMO antes de entrar al análisis |
+| **Reversión de estatus** | TERMINADO → ACTIVO, o PLANEACIÓN → TERMINADO | Requiere confirmación con motivo antes de entrar al análisis |
 | **Sin cambio material** | Dentro de las tolerancias | Se resume, no se lista |
 | **Mejora** | Movimiento favorable material | Distinguir sostenida de puntual |
 | **Deterioro** | Movimiento desfavorable material | Severidad por magnitud, velocidad y exposición |
@@ -410,7 +429,7 @@ Compara dos cortes cualesquiera (por defecto el último contra el anterior), **c
 - **Δ SPI** = efecto de lo ejecutado (ΔEV) frente al efecto de lo programado (ΔPV).
 - **Δ Fin Previsto** = Δ Fin Conveniado + Δ días en proceso. Si los días en proceso son negativos, se marca como dato inválido y no como adelanto.
 - **Δ OENE** = ΔEV − ΔEstimado.
-- **Δ Estatus** = estatus anterior, estatus nuevo, quién lo aprobó y por qué.
+- **Δ Estatus** = estatus anterior, estatus nuevo y motivo registrado.
 
 ### 11.4 Riesgos emergentes (señales con los datos disponibles)
 - **Cruce de umbral**: SPI < 0.90 o % OENE ≥ 10 %.
@@ -422,16 +441,41 @@ Compara dos cortes cualesquiera (por defecto el último contra el anterior), **c
 - **Contagio**: varios contratos del mismo proveedor, proyecto o responsable empeoran a la vez.
 - **Crecimiento contractual**: % de cambios acercándose al límite del 20 %.
 
-### 11.5 Evidencia real en 3 cortes
+### 11.5 Evidencia real en 6 cortes
 | Observación | Qué debería detectar el módulo |
 |---|---|
-| 2 contratos ACTIVO → TERMINADO → ACTIVO en dos semanas | Reversión de estatus y bloqueo hasta aprobación |
+| 2 contratos ACTIVO → TERMINADO → ACTIVO en dos semanas (confirmado en 6 cortes: TERMINADO solo el 23-sep) | Reversión de estatus y bloqueo hasta confirmar con motivo |
 | Días en proceso = −177 durante 2 semanas | Dato inválido; Fin Previsto saltó de jun-2027 a ago-2026 |
 | Convenios autorizados negativos (−$10.8 M, −$5.6 M) | Evento de convenio, no alerta |
 | 13 a 19 de 31 contratos cambian montos cada semana | Resumen por categoría para no listar 19 filas |
 | Totales de portafolio que se mueven al cambiar el estatus de 2 contratos | Separar efecto de composición de efecto de desempeño |
+| 17 líneas PLANEACIÓN sin OC (sub-alcances de la terminal) desaparecen entre el 27-may y el 10-jun, sin convertirse en contratos | Categoría "salió sin cierre" con alerta de calidad; la PMO debe indicar el motivo |
+| El acumulado de PV de un contrato baja $29.9 M entre el 09 y el 16-sep | Reprogramación (informativa); si bajan EV, Estimado o Facturado es advertencia |
+| El monto de marzo de la curva mensual pasa de $201.3 M a $58.5 M entre junio y septiembre | Reescritura de mes cerrado: informativa y con magnitud; refuerza la etiqueta "no conciliado" |
+| 3 plazos, 2 fechas de AIR y 1 % de anticipo cambian en 4 meses | Cambio de campo contractual: alerta con valor anterior y nuevo |
 
-### 11.6 Entregables del módulo
+### 11.6 Serie del programa observada (contratos ACTIVO, según la regla D-13)
+| Corte | Activos | SPI | Desviación | OENE | % OENE | Color |
+|---|---|---|---|---|---|---|
+| 27-may | 20 | 0.950 | −4.95 % | $77 M | 1.87 % | Verde |
+| 10-jun | 20 | 0.933 | −6.7 % | $101 M | 2.45 % | Ámbar |
+| 09-sep | 20 | 0.895 | −10.5 % | $193 M | 4.67 % | **Rojo** |
+| 16-sep | 19 | 0.919 | −8.1 % | $214 M | 5.27 % | Ámbar |
+| 23-sep | 17 | 0.911 | −8.9 % | $174 M | 4.65 % | Ámbar |
+| 30-sep | 19 | 0.943 | −5.7 % | $149 M | 3.66 % | Ámbar |
+
+El programa deterioró de mayo a septiembre, tocó rojo el 09-sep y desde entonces se recupera. Es exactamente la historia que hoy no se puede contar con el Excel solo. El 23-sep tiene 17 activos por el cambio de estatus de dos contratos.
+
+### 11.7 Versiones de plantilla observadas
+| Versión | Cortes | Encabezado | Diferencias |
+|---|---|---|---|
+| V1 | 27-may, 10-jun | Fila 2 (sin fila de totales) | 117 encabezados; **faltan** `$ Facturado Programado`, `% FP`, `$ Por Facturar`, `$ OENE Por Facturar`, `$ Desviación Por Facturar`; trae `Ajuste en Desviación` (vacía) |
+| V2 | 09-sep, 16-sep | Fila 3 | 123 encabezados; trae `Required Effort` y `Effort Increse2`; hoja oculta extra `ES \| Performance (2)` |
+| V3 | 23-sep, 30-sep | Fila 3 | 121 encabezados: la versión vigente |
+
+Las hojas ODC y Facturas son **idénticas en los 6 cortes** (de mayo a septiembre): confirmado que no alimentan nada. La lectura por encabezado resuelve los tres formatos; hay que mantener un mapa por versión para la carga retroactiva.
+
+### 11.8 Entregables del módulo
 Panel de conteos, lista priorizada con causa, vista agrupada por proveedor, proyecto o responsable, detalle causal por contrato, exportable a "minuta de cambios" y registro de cada comparación estándar para auditar qué se señaló.
 
 ---
@@ -441,18 +485,18 @@ Panel de conteos, lista priorizada con causa, vista agrupada por proveedor, proy
 | Área | Riesgo | Mitigación |
 |---|---|---|
 | **Calidad del Excel** | La plantilla cambia entre semanas | Lectura por encabezado, huella de plantilla, área de columnas no mapeadas |
-| | Captura manual: estatus, días negativos, datos pegados | Reglas bloqueantes, aprobación de la PMO, procedencia por valor |
+| | Captura manual: estatus, días negativos, datos pegados | Reglas bloqueantes, confirmación con motivo, procedencia por valor |
 | | Valores calculados con `HOY()` y vínculos externos | Todo se recalcula a la fecha de corte; los vínculos no se actualizan |
 | | La PMO consolida a mano desde los OPR (punto único de fallo) | Reglas de consistencia entre cortes; recuperar el OPR queda como opción futura |
 | | Identidad frágil de contratos | Clave OC, alias y revisión humana; ID de línea para alcances sin contratar |
-| **Mantenimiento** | Lógica de negocio dispersa | Capa semántica única y diccionario con dueño |
+| **Mantenimiento** | Lógica de negocio dispersa | Capa semántica única y diccionario versionado en el repositorio |
 | | Reglas de validación frágiles | Reglas declarativas, versionadas, con propietario de negocio |
 | | Dependencia de una persona | Documentación y pruebas con cortes reales |
 | **Crecimiento** | Más aeropuertos o más fuentes | Modelo por aeropuerto desde el inicio; capa de ingesta con contrato por fuente |
 | | Cambios de definición de KPI | Métricas versionadas; marcar series no comparables |
 | | Reorganización de proyectos | Jerarquías con vigencia: "como era" y "como es hoy" |
 | **Desempeño** | Bajo en esta etapa (≈1,800 filas por año) | Derivados precalculados por buena práctica, no por necesidad |
-| **Seguridad** | Datos contractuales y financieros sensibles | Seguridad por filas, cifrado, mínimo privilegio, auditoría |
+| **Seguridad** | Datos contractuales y financieros sensibles; el enlace público los expone a quien lo tenga | Enlace no adivinable y revocable (D-15), carga protegida, cifrado en tránsito, registro de cargas. Es un riesgo aceptado por decisión explícita |
 | | Archivos `.xlsm` con macros y vínculos externos | Lectura aislada sin ejecutar nada; descartar metadatos internos y rutas |
 | | Fuga por exportación | Exportaciones controladas y bitácora |
 | | Cambios al histórico | Crudo inmutable; auditoría de reaperturas y justificaciones |
@@ -467,11 +511,11 @@ Panel de conteos, lista priorizada con causa, vista agrupada por proveedor, proy
 
 | Fase | Contenido | Criterio de salida |
 |---|---|---|
-| **1. Arquitectura** (esta) | Documento maestro, diccionario, decisiones D-01 a D-14 y prueba de la regla del jueves y la deriva de plantilla con 3 a 4 cortes más | Documentos firmados por la PMO y la Dirección; D-12b y D-15 a D-17 resueltas |
+| **1. Arquitectura** (esta) | Documento maestro, diccionario, decisiones D-01 a D-15 y prueba con 6 cortes de Performance | Documentos aceptados por la PMO |
 | **2. Datos** | Modelo conformado definitivo, maestros y alias, catálogo de reglas, mapa de versiones de plantilla, **carga retroactiva de los Performance de 2026** (≈ 39 cortes, etiquetada "reconstruida") | Los cortes históricos cargados concilian con lo que la PMO reportó en su momento; cifras de control firmadas |
-| **3. Backend** | Pipeline de carga con validación, aprobación e idempotencia; capa semántica; motor de cambios; seguridad y auditoría | Una carga completa de punta a punta; pruebas de regresión con cortes reales |
+| **3. Backend** | Pipeline de carga con validación, confirmación e idempotencia; capa semántica; motor de cambios; registro de cargas; publicación del enlace de consulta | Una carga completa de punta a punta; pruebas de regresión con cortes reales |
 | **4. Frontend** | Orden: Cargas y Calidad → Resumen → Qué Cambió → Contrato 360 → Portafolio → Proveedores → Tendencias | La PMO prepara la junta semanal desde la plataforma sin abrir el Excel para analizar |
-| **5. Analytics** | Ranking descriptivo de contratos, alertas de riesgo emergente, vistas por rol, notificaciones, flujo mensual | Alertas validadas contra casos históricos ya conocidos ("¿habría detectado lo que ya sabíamos?") |
+| **5. Analytics** | Ranking descriptivo de contratos, alertas de riesgo emergente, flujo mensual | Alertas validadas contra casos históricos ya conocidos ("¿habría detectado lo que ya sabíamos?") |
 | **6. Producción** | Operación en paralelo con el Excel (4 a 8 semanas), endurecimiento de seguridad, respaldo y recuperación, capacitación, soporte | Aceptación formal; el Excel deja de usarse para análisis |
 
 **Olas futuras** (no comprometidas): incorporar el OPR (conciliación, PPC, riesgos, fianzas, causas), otros aeropuertos, conciliación con el sistema de facturación.
@@ -504,7 +548,7 @@ Panel de conteos, lista priorizada con causa, vista agrupada por proveedor, proy
 | D-04 | La única causa externa es LA (liberación de áreas por el aeropuerto) |
 | D-05 | Contrato crítico = SPI < 0.90 o % OENE ≥ 10 % o KPI de plazo crítico |
 | D-06 | ACTIVO = en ejecución; "CPI" = Índice de Estimación = Estimado/EV |
-| D-07 | La PMO aprueba los cambios de estatus |
+| D-07 | Los cambios de estatus se confirman con motivo escrito por quien carga el Excel (sin roles de aprobación, ver D-15) |
 | D-08 | La holgura (MS Project) la captura una persona |
 | D-09 | Las deductivas negativas en convenios son legítimas |
 | D-10 | Los umbrales de semáforo son los del instructivo |
@@ -512,33 +556,23 @@ Panel de conteos, lista priorizada con causa, vista agrupada por proveedor, proy
 | D-12 | Plataforma propia con herramienta BI complementaria (híbrido) |
 | D-13 | Semáforo de salud del programa: peor color entre desviación y % OENE de contratos ACTIVO |
 | D-14 | Aparecen todos los contratistas y todo ranking muestra su serie histórica |
+| D-15 | Sin roles, dueños ni usuarios: una persona carga el Excel y quien tenga el enlace consulta |
+| D-12b | Herramienta BI complementaria: Metabase Open Source |
 
-### 15.2 Resueltas el 02-oct-2026 y pendientes para cerrar la Fase 1
+### 15.2 Pendientes para cerrar la Fase 1
 
-| ID | Estado | Resolución |
-|---|---|---|
-| D-12 | Resuelta | Plataforma propia con herramienta BI complementaria (opción B) |
-| D-13 | Resuelta | Regla de salud del programa de la sección 9 |
-| D-14 | Resuelta | Aparecen todos los contratistas y todo ranking muestra su serie histórica |
+**Ninguna decisión abierta.** Se retiraron D-16 y D-17 (calendario de cambios de plantilla y roles por fila: la primera queda como recomendación en la sección 14 y la segunda no aplica). Lo que queda para cerrar la Fase 1 son los criterios de aceptación de la sección 16.
 
-Pendientes:
-| ID | Decisión | Quién |
-|---|---|---|
-| D-12b | Qué herramienta BI se usa como complemento y quién la licencia | Dirección + TI |
-| D-15 | Dueño del diccionario de métricas y quién aprueba cambios de definición | Dirección |
-| D-16 | Calendario de cambios a la plantilla (sección 14) | PMO |
-| D-17 | Quién consume la plataforma y con qué roles y alcance por fila | Dirección + PMO |
-
-### 15.3 Datos que mejorarían la Fase 1
-- 3 a 4 Performance más de 2026, repartidos entre enero y agosto, para probar la regla del jueves, el parseo por encabezado y la deriva de plantilla en un rango más largo.
-- Un Performance de un aeropuerto distinto (cuando exista) para confirmar la generalización del modelo.
+### 15.3 Datos que mejorarían la siguiente fase
+- Un Performance de un aeropuerto distinto (cuando exista), para confirmar que el modelo generaliza.
+- Todos los Performance semanales de 2026 que existan, para la carga retroactiva (hoy hay 6 cortes analizados, de mayo a septiembre).
 
 ---
 
 ## 16. Criterios de aceptación de la Fase 1
 
 1. La PMO valida el diccionario y los umbrales.
-2. D-12b y D-15 a D-17 tienen respuesta o fecha.
-3. La regla del jueves se confirma con cortes adicionales.
-4. Se acuerda el plan de corrección de la plantilla y quién lo ejecuta.
-5. Se confirma la lista de usuarios y roles de la primera versión.
+2. Se instala y se prueba la herramienta BI propuesta (D-12b).
+3. La regla del jueves queda confirmada (verificada con OPR en 3 cortes; los otros 3 cortes no la pueden probar por no traer fecha propia).
+4. La PMO acepta el plan de corrección de la plantilla de la sección 14.
+5. Se acepta el modelo de acceso por enlace y sus consecuencias (sección 4.4).

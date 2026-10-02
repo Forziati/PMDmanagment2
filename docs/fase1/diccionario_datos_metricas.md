@@ -1,6 +1,6 @@
 # Fase 1 · Diccionario de datos y de métricas
 
-Estado: **borrador v0.5 para validación de la PMO** (incorpora las decisiones de la sección 9) · Alcance inicial: aeropuerto GDL · Base de análisis: 3 cortes de Performance (16, 23 y 30-sep-2026) y 1 OPR (contrato GDLC25-027, OC GDL-OC-0007238).
+Estado: **borrador v0.6 para validación de la PMO** (incorpora las decisiones de la sección 9) · Alcance inicial: aeropuerto GDL · Base de análisis: **6 cortes de Performance** (27-may, 10-jun, 09-sep, 16-sep, 23-sep y 30-sep-2026) y 1 OPR (contrato GDLC25-027, OC GDL-OC-0007238).
 
 Este documento no contiene código, SQL ni diseño de pantallas. Define **qué es cada dato, de dónde viene, cómo se valida y cómo lo trata la plataforma**.
 
@@ -175,7 +175,7 @@ Leyenda de "Verif.": ✔ = coincide exactamente con el OPR del contrato GDLC25-0
 - Origen del dato real: no se conoce el sistema. Para GDLC25-027 **no coincide con las series mensuales del OPR** (sep-26: Performance $37.3 M; OPR facturado real $55.7 M). Se acepta como lo captura la PMO y se etiqueta "no conciliado".
 - Se contrastó con todas las series mensuales del OPR (PV, EV, estimado, facturado neto, amortizado, facturación programada) y ninguna coincide: jul-26 $21.3 M contra estimado $7.0 M; ago-26 $33.6 M contra $58.5 M.
 - **Tratamiento**: se almacena por mes con su tipo (real, parcial, programado). Puede usarse en la vista de flujo mensual, con la etiqueta "origen Performance, no conciliado". No entra en KPI ejecutivos hasta que se identifique el sistema de origen. Los subtotales anuales se descartan (se recalculan).
-- **Regla de estabilidad (Q-21)**: un mes ya cerrado no debe cambiar entre cortes; si cambia, es reescritura de la historia y se señala.
+- **Con 6 cortes se ve que la serie se reescribe en bloque cada mes**, también en meses ya cerrados (mar-26: $201.3 M → $58.5 M). Eso es difícil de reconciliar con "facturación real" y refuerza la etiqueta "no conciliado"; la regla Q-21 informa cada reescritura con su magnitud.
 
 ### 3.7 Columnas que aparecieron o desaparecieron
 - **Corte 16-sep**: 2 columnas extra (`Required Effort`, `Effort Increse2`) entre SPI y CPI; el resto se desplazó 2 posiciones. No existen en los cortes 23 y 30.
@@ -265,8 +265,8 @@ Severidad: **B** = bloquea la publicación; **A** = advertencia que exige justif
 | Q-01 | Estructura reconocida (hojas, tabla y encabezados por nombre) | B | Columnas extra el 16-sep |
 | Q-02 | Una sola fila por (aeropuerto, OC) en el corte | B | — |
 | Q-03 | OC presente en contratos ACTIVO y TERMINADO | B | 3 filas sin OC |
-| Q-04 | Estatus dentro de la lista cerrada; el cambio exige aprobación de la PMO | B | 2 contratos ACTIVO → TERMINADO → ACTIVO |
-| Q-05 | Un contrato TERMINADO no puede volver a ACTIVO sin aprobación y motivo | B | Ídem |
+| Q-04 | Estatus dentro de la lista cerrada; todo cambio exige confirmación con motivo escrito de quien carga | B | 2 contratos ACTIVO → TERMINADO → ACTIVO (solo el 23-sep) |
+| Q-05 | Un contrato TERMINADO no puede volver a ACTIVO sin confirmación y motivo | B | Ídem |
 | Q-06 | Días en proceso ≥ 0 | B | −177 y −4 |
 | Q-07 | TERMINADO exige acta de entrega-recepción | A | 15/15 sin acta |
 | Q-08 | ACTIVO exige AIR y EV > 0 | A | — |
@@ -275,15 +275,17 @@ Severidad: **B** = bloquea la publicación; **A** = advertencia que exige justif
 | Q-11 | EV ≤ total contratado × (1 + tolerancia) | A | 2 a 3 contratos por semana |
 | Q-12 | Performance vs OPR: PV, EV, E, facturado, convenios y fechas deben coincidir | A | **Diferida** hasta que se cargue el OPR. Mientras tanto: los convenios de Performance no coinciden con la hoja ODC en 7/31 contratos |
 | Q-13 | Valores redondos exactos o repetidos en EV/PV/E semanal | A | EV = $5,000,000 en la semana 59 |
-| Q-14 | Acumulados no decrecientes (EV, E, facturado, amortizado) | A | ○ |
-| Q-15 | Campos maestros estables (base, contratado, proveedor, responsable) | A | Estables en 3 cortes |
+| Q-14 | EV, Estimado y Facturado acumulados no decrecen entre cortes (advertencia). Si baja el PV acumulado se clasifica como **reprogramación** (informativa) | A / I | EV: 2 casos; Estimado: 1; Facturado: 1; **PV: 11 casos** (hasta −$29.9 M) en 6 cortes |
+| Q-15 | Campos maestros y contractuales estables (base, contratado, proveedor, responsable, plazo, AIR, % anticipo): un cambio muestra valor anterior y nuevo | A | Proveedor, responsable, base y contratado: 0 cambios en 4 meses. Plazo: 3 contratos; AIR: 2; % anticipo: 1 |
 | Q-16 | Proveedor y responsable resueltos al catálogo | A | 31 valores, 28 distintos |
 | Q-17 | OPR recibido para cada contrato ACTIVO | A | **Diferida** (no aplica en Fase 1) |
 | Q-18 | Fecha de entrega coherente con el jueves de cierre derivado (§2.2); entrega tardía marcada | A | Tres fechas distintas |
 | Q-19 | Vencimiento de fianzas dentro del umbral | I | **Fuera de alcance** (depende del OPR) |
 | Q-20 | Archivos con macros o vínculos externos: se registran y se leen en modo aislado | I | 3 vínculos externos en el Performance |
-| Q-21 | Los meses cerrados de la curva mensual no cambian entre cortes | A | Estables en 3 cortes |
+| Q-21 | Reescritura de meses cerrados de la curva mensual: se informa con la magnitud | I | **Confirmada**: el monto de mar-26 pasa de $201.3 M (junio) a $58.5 M (septiembre); abr-26 de $201.0 M a $272.0 M. La serie solo cambia en bloque cada mes |
 | Q-22 | Holgura presente en contratos ACTIVO | A | Vacía en 34 de 34 |
+| Q-24 | Línea que desaparece entre cortes sin pasar a contrato: "salió sin cierre" | A | **17 líneas PLANEACIÓN sin OC** desaparecen entre el 27-may y el 10-jun |
+| Q-25 | Días en proceso negativos | B | −4 el 10-jun; −177 y −4 el 23 y 30-sep |
 
 ---
 
@@ -322,7 +324,7 @@ Las fórmulas son **definiciones conceptuales** para acordar con la PMO; aún no
 
 | Plantilla | Versión observada | Diferencias detectadas | Estrategia |
 |---|---|---|---|
-| Performance (F-074) | Sin número de versión; cortes 16, 23, 30 | 16-sep tiene 2 columnas extra | Firma por conjunto de encabezados; registrar una "huella de plantilla" por carga |
+| Performance (F-074) | **V1** (27-may, 10-jun): encabezado en fila 2, 117 encabezados, faltan 5 columnas (`$ Facturado Programado`, `% FP`, `$ Por Facturar`, `$ OENE Por Facturar`, `$ Desviación Por Facturar`) y trae `Ajuste en Desviación` vacía. **V2** (09-sep, 16-sep): fila 3, 123 encabezados, con `Required Effort` y `Effort Increse2` y una hoja oculta extra. **V3** (23-sep, 30-sep): fila 3, 121 encabezados, la vigente | Cada corte puede traer una versión distinta; las columnas faltantes en V1 se rellenan con "sin dato" | Firma por conjunto de encabezados y mapa por versión; registrar una "huella de plantilla" por carga |
 | OPR (F-036) | Rev.02 | Una sola muestra | Mismo mecanismo; pedir 3 a 5 OPR de contratos y semanas distintas |
 
 **Cambios recomendados a las plantillas** (los acordados hasta ahora): número de versión visible, ID de línea, ID de riesgo, estatus con lista cerrada y corregida (sin `EN EJECUCIÓN`), validación en `Facturas`, catálogos para proveedor y responsable, y corrección de las fórmulas de KPI que tratan ACTIVO como "SIN INICIAR".
@@ -375,11 +377,13 @@ Respuestas de la PMO del 02-oct-2026:
 | D-04 | La única causa externa es LA (liberación de áreas por el aeropuerto) | 02-oct-2026 | Aplica al ranking cuando exista el dato |
 | D-05 | Contrato crítico = SPI < 0.90 o % OENE ≥ 10 % o KPI de plazo en crítico | 02-oct-2026 | Base de KPI ejecutivos |
 | D-06 | ACTIVO equivale a en ejecución; el CPI se redefine como Índice de Estimación = E/EV | previas | Ver §3.1 y §3.3 |
-| D-07 | Los cambios de estatus los aprueba la PMO | previas | Reglas Q-04 y Q-05 |
+| D-07 | Los cambios de estatus se confirman con motivo escrito por quien carga el Excel (ver D-15) | previas | Reglas Q-04 y Q-05 |
 | D-08 | La holgura (MS Project) la captura una persona en Performance | 02-oct-2026 | Campo CAP con regla Q-22 |
 | D-09 | Las deductivas negativas en convenios son legítimas | 02-oct-2026 | Sin alerta por signo negativo |
 | D-10 | Los umbrales de semáforo son los ya establecidos en el instructivo del formato | 02-oct-2026 | Se incorporan al catálogo de reglas |
 | D-11 | El PPC queda fuera de alcance por ahora | 02-oct-2026 | Sin KPI, regla ni pantalla de PPC; la columna se conserva sin interpretar |
-| D-12 | Plataforma propia con herramienta BI complementaria (híbrido); falta elegir la herramienta (D-12b) | 02-oct-2026 | Capa semántica propia, expuesta a la herramienta BI |
+| D-12 | Plataforma propia con herramienta BI complementaria (híbrido) | 02-oct-2026 | Capa semántica propia, expuesta a la herramienta BI |
+| D-12b | Herramienta BI: **Metabase Open Source** (gratis, enlace público de solo lectura) | 02-oct-2026 | Ver documento maestro §4.3 |
 | D-13 | Salud del programa = peor color entre desviación y %OENE de contratos ACTIVO | 02-oct-2026 | Regla de semáforo ejecutivo |
 | D-14 | Aparecen todos los contratistas y todo ranking muestra su serie histórica; sin mínimo para figurar | 02-oct-2026 | Se muestra confianza baja en lugar de ocultar |
+| D-15 | Sin roles, dueños ni usuarios: una persona carga el Excel y quien tenga el enlace consulta | 02-oct-2026 | Sin permisos por fila ni notificaciones por responsable; el enlace es revocable |

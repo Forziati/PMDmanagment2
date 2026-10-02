@@ -1,6 +1,6 @@
 # Fase 1 · Diccionario de datos y de métricas
 
-Estado: **borrador v0.1 para validación de la PMO** · Alcance inicial: aeropuerto GDL · Base de análisis: 3 cortes de Performance (16, 23 y 30-sep-2026) y 1 OPR (contrato GDLC25-027, OC GDL-OC-0007238).
+Estado: **borrador v0.2 para validación de la PMO** (incorpora las decisiones de la sección 9) · Alcance inicial: aeropuerto GDL · Base de análisis: 3 cortes de Performance (16, 23 y 30-sep-2026) y 1 OPR (contrato GDLC25-027, OC GDL-OC-0007238).
 
 Este documento no contiene código, SQL ni diseño de pantallas. Define **qué es cada dato, de dónde viene, cómo se valida y cómo lo trata la plataforma**.
 
@@ -35,8 +35,8 @@ Este documento no contiene código, SQL ni diseño de pantallas. Define **qué e
 
 | Fuente | Formato | Grano | Frecuencia | Rol |
 |---|---|---|---|---|
-| **OPR · Avance Semanal** (GAPINFRA-F-036 Rev.02) | .xlsb | 1 contrato × 1 semana (serie semanal completa desde el inicio del contrato) | Semanal, límite miércoles | **Fuente primaria** de avance, finanzas, convenios, riesgos, PPC y causas |
-| **Performance · Control de Contratos** (GAPINFRA-F-074) | .xlsm | 1 contrato (u OC) × 1 corte | Semanal, límite miércoles | Consolidado de la PMO: agrega clasificación, responsables, estatus y comisionamiento; sirve para **conciliar** contra los OPR |
+| **Performance · Control de Contratos** (GAPINFRA-F-074) | .xlsm | 1 contrato (u OC) × 1 corte | Semanal, límite miércoles | **Única fuente cargada en la Fase 1** (decisión D-01) |
+| OPR · Avance Semanal (GAPINFRA-F-036 Rev.02) | .xlsb | 1 contrato × 1 semana (serie semanal completa desde el inicio del contrato) | Semanal, límite miércoles | **Diferido.** Origen real de PV, EV, E, facturado, convenios, PPC, riesgos y causas; la PMO lo copia a mano al Performance. El modelo debe quedar preparado para incorporarlo después |
 | Hoja ODC (dentro de Performance) | .xlsm | 1 ODC | Semanal | **Degradada**: idéntica en 3 cortes, no alimenta nada (ver §5, regla Q-12) |
 | Hoja Facturas (dentro de Performance) | .xlsm | 1 factura | Semanal | **Degradada**: 14 filas, idéntica en 3 cortes, sin fechas |
 
@@ -47,7 +47,9 @@ Este documento no contiene código, SQL ni diseño de pantallas. Define **qué e
 - Regla: el **contenido manda sobre el nombre**. Si el nombre dice una OC y el contenido otra, la carga se bloquea.
 - Los últimos 4 dígitos de la OC no son únicos entre prefijos (GDL-OC-, DTI-OC-); la identidad se confirma con la OC completa leída del contenido.
 
-**Completitud esperada de un corte**: 1 Performance + 1 OPR por cada contrato ACTIVO. Un OPR faltante genera alerta y el corte queda "incompleto".
+**Completitud esperada de un corte (Fase 1)**: 1 Performance del aeropuerto. Cuando se incorpore el OPR, se esperará además 1 OPR por cada contrato ACTIVO.
+
+**Consecuencia de cargar solo el Performance**: la plataforma no podrá conciliar PV, EV y Estimado contra su origen, ni tendrá PPC, riesgos, fianzas, causas de no cumplimiento ni historia semanal propia. Esos números se aceptan como los captura la PMO y se protegen con reglas de consistencia entre cortes (Q-11 a Q-15).
 
 ---
 
@@ -63,7 +65,7 @@ Este documento no contiene código, SQL ni diseño de pantallas. Define **qué e
 | Proveedor | ID interno + alias | 31 valores en 28 distintos; variantes por comas y mayúsculas. |
 | Persona | ID interno + alias | Variantes de nombre y errores de captura. |
 
-### 2.2 Tiempo: cuatro fechas distintas
+### 2.2 Tiempo: fechas y semana PMO (decisión D-03: la semana cierra en jueves)
 | Fecha | Dónde aparece | Observación |
 |---|---|---|
 | **Fecha de corte** | Se declara al cargar | Fecha oficial de la plataforma; por defecto toma la del nombre del archivo y el usuario la confirma. |
@@ -72,7 +74,14 @@ Este documento no contiene código, SQL ni diseño de pantallas. Define **qué e
 | Cierre de semana del OPR | Filas semanales | Las filas semanales de este OPR terminan en **jueves**; el instructivo dice domingo. A resolver. |
 | Fecha de guardado | Metadatos del archivo | **No usar**: el archivo del 23 se guardó el 02-oct. |
 
-Decisión propuesta: **semana PMO** = semana que cierra el día de corte confirmado; la plataforma guarda siempre la fecha de corte y el número de semana del contrato.
+**Regla acordada: la semana PMO cierra en jueves.** Se verificó con el contrato GDLC25-027: el Performance del miércoles 16-sep trae los valores de la semana que cierra el jueves 17-sep; el del 23-sep, los del jueves 24-sep; y el del 30-sep, los del jueves 01-oct. Es decir, **el archivo del miércoles reporta la semana que cierra el jueves siguiente** (parte de ella aún no ha ocurrido al entregar).
+
+Por tanto:
+- **Semana PMO** = el jueves de cierre. Es la fecha de corte oficial de la plataforma (corte 16-sep → 17-sep; 23-sep → 24-sep; 30-sep → 01-oct).
+- La fecha del nombre del archivo se guarda como **fecha de entrega** y se compara con la anterior.
+- Si el archivo se entrega tarde (después del jueves de cierre), la plataforma lo marca como "entrega tardía" y no lo asigna automáticamente a otra semana: la PMO confirma.
+- El corte oficial se calcula, el usuario lo confirma al cargar.
+- El instructivo del OPR habla de domingo; debe corregirse a jueves.
 
 ---
 
@@ -129,8 +138,8 @@ Leyenda de "Verif.": ✔ = coincide exactamente con el OPR del contrato GDLC25-0
 |---|---|---|---|
 | SPI | CALC | ✔ | **EV / PV**, con precisión completa. El Excel lo redondea a 2 decimales. |
 | CPI | CALC | ✔ | **Se renombra "Índice de Estimación" = E / EV** (confirmado por la PMO). Mide qué proporción de lo ejecutado ya está estimado; menor a 1 significa OENE. El instructivo lo documenta al revés (EV/E) y debe corregirse. |
-| PPC | OPR | ○ | Vacío en las 34 filas. Existe en el OPR (hoja Lean, PPC semanal). Se toma del OPR. |
-| Holgura | OPR/externo | ○ | Vacío en las 34 filas. Origen declarado: MS Project. Pendiente. |
+| PPC | OPR | ○ | Vacío en las 34 filas. Existe en el OPR, pero el OPR no se carga en la Fase 1: **no habrá PPC hasta que alguien lo capture en Performance o se incorpore el OPR**. No se promete en las pantallas iniciales. |
+| Holgura | OPR/externo | ○ | Vacío en las 34 filas. Origen declarado: MS Project. Mismo caso que PPC. |
 
 ### 3.4 Plazo
 | Campo | Clase | Regla / tratamiento |
@@ -163,7 +172,8 @@ Leyenda de "Verif.": ✔ = coincide exactamente con el OPR del contrato GDLC25-0
 - Origen: Performance. Las 48 columnas **no cambiaron en 3 cortes**.
 - Definición de la PMO: **facturación real del mes**.
 - **Conflicto abierto**: hay montos en meses futuros (hasta dic-27) y, para GDLC25-027, no coincide con el OPR (sep-26: Performance $37.3 M; OPR facturado real $55.7 M y programado $41.8 M; oct-26: Performance $38.9 M; OPR real $0 y programado $47.2 M). Ver pregunta P-02.
-- Tratamiento provisional: se almacena como serie mensual con etiqueta de origen "Performance" y **no se usa en KPI** hasta resolver P-02. Los subtotales anuales se descartan (se recalculan).
+- Se contrastó la serie de GDLC25-027 con todas las series mensuales del OPR (PV, EV, estimado, facturado neto, amortizado, facturación programada): **ninguna coincide**. Jul-26 Performance $21.3 M contra estimado $7.0 M; ago-26 $33.6 M contra $58.5 M; sep-26 $37.3 M contra $92.9 M. El origen sigue desconocido (P-02).
+- Tratamiento acordado (D-02): se almacena como serie mensual con origen "Performance, sin validar" y **no se usa en ningún KPI ni pantalla ejecutiva**. Los subtotales anuales se descartan (se recalculan).
 
 ### 3.7 Columnas que aparecieron o desaparecieron
 - **Corte 16-sep**: 2 columnas extra (`Required Effort`, `Effort Increse2`) entre SPI y CPI; el resto se desplazó 2 posiciones. No existen en los cortes 23 y 30.
@@ -171,7 +181,9 @@ Leyenda de "Verif.": ✔ = coincide exactamente con el OPR del contrato GDLC25-0
 
 ---
 
-## 4. Diccionario · OPR (`GAPINFRA-F-036`)
+## 4. Diccionario · OPR (`GAPINFRA-F-036`) — fase posterior
+
+> **No se carga en la Fase 1 (D-01).** Se documenta porque el modelo de datos debe reservar sitio para estas entidades (convenios, fianzas, riesgos, PPC, causas, serie semanal) y porque es el origen real de los números de Performance.
 
 Hojas: `Instrucciones`, `ES | Seguimiento de Ejecución`, `ES | Lean`, `ES | OPR` (la que se presenta), `Flecha` (colores, se ignora). Contiene imágenes y gráficas (el archivo pesa ≈ 6 MB): se conservan como adjuntos y no se interpretan.
 
@@ -222,7 +234,7 @@ Tratamiento:
 |---|---|
 | Holgura (días) | Resuelve el campo vacío de Performance. |
 | PPC histórico semanal (% y fecha) | Serie semanal. |
-| **Causas de no cumplimiento (CNC)**: catálogo de **18 claves** (SM suministro de materiales, FE equipo, FT fuerza de trabajo, TO/TP trabajos previos de otros o propios, CD calidad deficiente, EP error de programación, ET estimación incorrecta de tiempo, RT retrabajo, TT trámite a destiempo, DI diseño, RP requerimientos fuera de proyecto, AD contrato/ODC/convenios, CI condiciones inseguras, SO seguridad operacional, CC clima, LA liberación de áreas por el aeropuerto, LT logística) y total por causa | **Resuelve la causa de desviación** que el ranking de contratistas necesita. Permite separar causas atribuibles al contratista (SM, FE, FT, CD, RT, EP, ET) de causas externas (LA, TO, DI, RP, AD, CC, SO). Clasificación a validar con la PMO. |
+| **Causas de no cumplimiento (CNC)**: catálogo de **18 claves** (SM suministro de materiales, FE equipo, FT fuerza de trabajo, TO/TP trabajos previos de otros o propios, CD calidad deficiente, EP error de programación, ET estimación incorrecta de tiempo, RT retrabajo, TT trámite a destiempo, DI diseño, RP requerimientos fuera de proyecto, AD contrato/ODC/convenios, CI condiciones inseguras, SO seguridad operacional, CC clima, LA liberación de áreas por el aeropuerto, LT logística) y total por causa | **Resuelve la causa de desviación** que el ranking de contratistas necesita. Clasificación acordada (D-04): **la única causa externa es LA (liberación de áreas por el aeropuerto)**; las otras 17 se consideran atribuibles al contratista o a su gestión y entran al ranking. Se mantienen las 18 claves para el análisis, pero solo LA se excluye del puntaje. |
 
 ### 4.6 Riesgos
 | Campo | Notas |
@@ -259,13 +271,13 @@ Severidad: **B** = bloquea la publicación; **A** = advertencia que exige justif
 | Q-09 | OENE contratada + por regularizar ≤ OENE | A | ○ |
 | Q-10 | Convenios acumulados ≤ 20 % del contratado original | A | ○ |
 | Q-11 | EV ≤ total contratado × (1 + tolerancia) | A | 2 a 3 contratos por semana |
-| Q-12 | Performance vs OPR: PV, EV, E, facturado, convenios y fechas deben coincidir | A | Convenios: 7/31 no coinciden con la hoja ODC |
+| Q-12 | Performance vs OPR: PV, EV, E, facturado, convenios y fechas deben coincidir | A | **Diferida** hasta que se cargue el OPR. Mientras tanto: los convenios de Performance no coinciden con la hoja ODC en 7/31 contratos |
 | Q-13 | Valores redondos exactos o repetidos en EV/PV/E semanal | A | EV = $5,000,000 en la semana 59 |
 | Q-14 | Acumulados no decrecientes (EV, E, facturado, amortizado) | A | ○ |
 | Q-15 | Campos maestros estables (base, contratado, proveedor, responsable) | A | Estables en 3 cortes |
 | Q-16 | Proveedor y responsable resueltos al catálogo | A | 31 valores, 28 distintos |
-| Q-17 | OPR recibido para cada contrato ACTIVO | A | No evaluable aún |
-| Q-18 | Fecha de corte coherente con nombre y contenido | A | Tres fechas distintas |
+| Q-17 | OPR recibido para cada contrato ACTIVO | A | **Diferida** (no aplica en Fase 1) |
+| Q-18 | Fecha de entrega coherente con el jueves de cierre derivado (§2.2); entrega tardía marcada | A | Tres fechas distintas |
 | Q-19 | Vencimiento de fianzas dentro del umbral | I | Nuevo |
 | Q-20 | Archivos con macros o vínculos externos: se registran y se leen en modo aislado | I | 3 vínculos externos en el Performance |
 
@@ -296,9 +308,9 @@ Las fórmulas son **definiciones conceptuales** para acordar con la PMO; aún no
 | **Corrimientos de fecha** | Número de veces que cambió Fin Previsto entre cortes y días acumulados | Contrato | Señal de atraso crónico |
 | **% Incremento de plazo** | (Fin previsto − fin original) ÷ plazo original | Por contrato | Menor ≤ 20 %; moderado ≤ 50 %; mayor > 50 % |
 | **PPC** | Del OPR (Lean), semanal | Promedio ponderado por actividades cuando exista el dato | — |
-| **Causas de no cumplimiento** | Conteo por clave CNC y por periodo | Suma | Pareto por contrato, proveedor y aeropuerto |
-| **Contratos críticos** | Contratos con SPI < 0.90 **o** % OENE ≥ 10 % **o** KPI de plazo en crítico | Conteo y valor contratado | Definición a validar con la PMO |
-| **Salud del programa** | Semáforo con reglas explícitas sobre ΣSPI, %OENE y valor en riesgo | Programa | Reglas pendientes (P-06) |
+| **Causas de no cumplimiento** | Conteo por clave CNC y por periodo (excluye LA del puntaje) | Suma | Solo cuando se cargue el OPR |
+| **Contratos críticos** | Contratos con SPI < 0.90 **o** % OENE ≥ 10 % **o** KPI de plazo en crítico | Conteo y valor contratado | **Aprobado (D-05)** |
+| **Salud del programa** | Semáforo con reglas explícitas sobre ΣSPI, %OENE y valor en riesgo | Programa | Reglas pendientes (P-06); se propondrá un semáforo con la definición de contrato crítico como base |
 
 ---
 
@@ -313,7 +325,12 @@ Las fórmulas son **definiciones conceptuales** para acordar con la PMO; aún no
 
 ---
 
-## 8. Preguntas abiertas
+## 8. Estado de preguntas
+
+Resueltas: P-01 (solo Performance), P-04 (cierra jueves), P-05 (solo LA es externa), P-06 parcialmente (contrato crítico aprobado).
+Siguen abiertas las demás; en particular **P-02** (origen de la curva mensual) se queda como "no se sabe" y se maneja sin usarla.
+
+## 8.1 Preguntas abiertas
 
 | ID | Pregunta | Quién |
 |---|---|---|
@@ -327,3 +344,17 @@ Las fórmulas son **definiciones conceptuales** para acordar con la PMO; aún no
 | P-08 | ¿Los OPR de otros aeropuertos usarán la misma plantilla? | PMO |
 | P-09 | Política de retención de archivos originales y adjuntos (fotos). | TI / PMO |
 | P-10 | ¿Las deductivas negativas en convenios (−$10.8 M, −$5.6 M) corresponden a convenios reales? | Contratos |
+
+---
+
+## 9. Decisiones registradas
+
+| ID | Decisión | Fecha | Impacto |
+|---|---|---|---|
+| D-01 | En la Fase 1 solo se carga el Performance; el OPR queda diferido | 02-oct-2026 | La plataforma no concilia contra el origen y no tendrá PPC, riesgos, fianzas ni causas hasta incorporar el OPR. El modelo reserva sitio para ello |
+| D-02 | La curva mensual de Performance se almacena pero no se usa | 02-oct-2026 | Sin KPI de facturación mensual por ahora |
+| D-03 | La semana PMO cierra en jueves; el archivo del miércoles reporta la semana que cierra el jueves siguiente | 02-oct-2026 | Fecha de corte = jueves derivado; el nombre del archivo es fecha de entrega |
+| D-04 | La única causa externa es LA (liberación de áreas por el aeropuerto) | 02-oct-2026 | Aplica al ranking cuando exista el dato |
+| D-05 | Contrato crítico = SPI < 0.90 o % OENE ≥ 10 % o KPI de plazo en crítico | 02-oct-2026 | Base de KPI ejecutivos |
+| D-06 | ACTIVO equivale a en ejecución; el CPI se redefine como Índice de Estimación = E/EV | previas | Ver §3.1 y §3.3 |
+| D-07 | Los cambios de estatus los aprueba la PMO | previas | Reglas Q-04 y Q-05 |

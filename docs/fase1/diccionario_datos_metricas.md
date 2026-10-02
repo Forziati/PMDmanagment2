@@ -1,6 +1,6 @@
 # Fase 1 · Diccionario de datos y de métricas
 
-Estado: **borrador v0.3 para validación de la PMO** (incorpora las decisiones de la sección 9) · Alcance inicial: aeropuerto GDL · Base de análisis: 3 cortes de Performance (16, 23 y 30-sep-2026) y 1 OPR (contrato GDLC25-027, OC GDL-OC-0007238).
+Estado: **borrador v0.4 para validación de la PMO** (incorpora las decisiones de la sección 9) · Alcance inicial: aeropuerto GDL · Base de análisis: 3 cortes de Performance (16, 23 y 30-sep-2026) y 1 OPR (contrato GDLC25-027, OC GDL-OC-0007238).
 
 Este documento no contiene código, SQL ni diseño de pantallas. Define **qué es cada dato, de dónde viene, cómo se valida y cómo lo trata la plataforma**.
 
@@ -138,7 +138,7 @@ Leyenda de "Verif.": ✔ = coincide exactamente con el OPR del contrato GDLC25-0
 |---|---|---|---|
 | SPI | CALC | ✔ | **EV / PV**, con precisión completa. El Excel lo redondea a 2 decimales. |
 | CPI | CALC | ✔ | **Se renombra "Índice de Estimación" = E / EV** (confirmado por la PMO). Mide qué proporción de lo ejecutado ya está estimado; menor a 1 significa OENE. El instructivo lo documenta al revés (EV/E) y debe corregirse. |
-| PPC | OPR | ○ | Vacío en las 34 filas. Existe en el OPR, pero el OPR no se carga en la Fase 1: **no habrá PPC hasta que alguien lo capture en Performance o se incorpore el OPR**. No se promete en las pantallas iniciales. |
+| PPC | OPR | ○ | Vacío en las 34 filas. **Fuera de alcance por decisión de la PMO (D-11)**: la columna se lee y se conserva tal como venga, pero no genera KPI, regla de calidad ni pantalla. |
 | Holgura | CAP | ○ | Origen: MS Project; **la captura la hará una persona en Performance** (D-08). Hoy vacío en las 34 filas. Días enteros; positivo = atraso, negativo = adelanto. Un valor vacío en contrato ACTIVO es advertencia (Q-22). |
 
 ### 3.4 Plazo
@@ -284,7 +284,6 @@ Severidad: **B** = bloquea la publicación; **A** = advertencia que exige justif
 | Q-20 | Archivos con macros o vínculos externos: se registran y se leen en modo aislado | I | 3 vínculos externos en el Performance |
 | Q-21 | Los meses cerrados de la curva mensual no cambian entre cortes | A | Estables en 3 cortes |
 | Q-22 | Holgura presente en contratos ACTIVO | A | Vacía en 34 de 34 |
-| Q-23 | PPC presente en contratos ACTIVO (si la PMO decide capturarlo) | I | Vacío en 34 de 34 |
 
 ---
 
@@ -312,7 +311,7 @@ Las fórmulas son **definiciones conceptuales** para acordar con la PMO; aún no
 | **Días para fin** | Fin previsto − fecha de corte | Por contrato | Negativo = vencido |
 | **Corrimientos de fecha** | Número de veces que cambió Fin Previsto entre cortes y días acumulados | Contrato | Señal de atraso crónico |
 | **% Incremento de plazo** | (Fin previsto − fin original) ÷ plazo original | Por contrato | Menor ≤ 20 %; moderado ≤ 50 %; mayor > 50 % |
-| **PPC** | Del OPR (Lean), semanal | Promedio ponderado por actividades cuando exista el dato | — |
+| **PPC** | Fuera de alcance (D-11) | — | No se calcula ni se muestra |
 | **Causas de no cumplimiento** | Conteo por clave CNC y por periodo (excluye LA del puntaje) | Suma | Solo cuando se cargue el OPR |
 | **Contratos críticos** | Contratos con SPI < 0.90 **o** % OENE ≥ 10 % **o** KPI de plazo en crítico | Conteo y valor contratado | **Aprobado (D-05)** |
 | **Salud del programa** | Se aplican los **umbrales ya establecidos por la PMO** (instructivo del formato, §6 y apartado "Indicadores críticos") sobre las sumas del programa: ΣEV/ΣPV, %OENE total, % de contratos críticos y valor contratado en riesgo | Programa | Definidos (D-10); falta solo fijar cómo se agregan a un único color |
@@ -347,7 +346,7 @@ Respuestas de la PMO del 02-oct-2026:
 | P-09 | Cerrada | No aplica |
 | P-10 | Cerrada | Las deductivas negativas son convenios reales |
 
-Queda abierta **P-11**: ¿alguien capturará PPC en Performance? Hoy está vacío y su origen es el OPR, que no se usará.
+**P-11** (¿quién captura el PPC?) queda cerrada: el PPC está fuera de alcance por ahora (D-11).
 
 ## 8.1 Preguntas originales (referencia histórica)
 
@@ -380,3 +379,4 @@ Queda abierta **P-11**: ¿alguien capturará PPC en Performance? Hoy está vací
 | D-08 | La holgura (MS Project) la captura una persona en Performance | 02-oct-2026 | Campo CAP con regla Q-22 |
 | D-09 | Las deductivas negativas en convenios son legítimas | 02-oct-2026 | Sin alerta por signo negativo |
 | D-10 | Los umbrales de semáforo son los ya establecidos en el instructivo del formato | 02-oct-2026 | Se incorporan al catálogo de reglas |
+| D-11 | El PPC queda fuera de alcance por ahora | 02-oct-2026 | Sin KPI, regla ni pantalla de PPC; la columna se conserva sin interpretar |

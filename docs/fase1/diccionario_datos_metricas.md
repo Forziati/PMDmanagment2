@@ -65,7 +65,7 @@ Este documento no contiene código, SQL ni diseño de pantallas. Define **qué e
 | Proveedor | ID interno + alias | 31 valores en 28 distintos; variantes por comas y mayúsculas. |
 | Persona | ID interno + alias | Variantes de nombre y errores de captura. |
 
-### 2.2 Tiempo: fechas y semana PMO (decisión D-03: la semana cierra en jueves)
+### 2.2 Tiempo: el corte es el jueves y es un dato de entrada (D-03)
 | Fecha | Dónde aparece | Observación |
 |---|---|---|
 | **Fecha de corte** | Se declara al cargar | Fecha oficial de la plataforma; por defecto toma la del nombre del archivo y el usuario la confirma. |
@@ -74,12 +74,12 @@ Este documento no contiene código, SQL ni diseño de pantallas. Define **qué e
 | Cierre de semana del OPR | Filas semanales | Las filas semanales de este OPR terminan en **jueves**; el instructivo dice domingo. A resolver. |
 | Fecha de guardado | Metadatos del archivo | **No usar**: el archivo del 23 se guardó el 02-oct. |
 
-**Regla acordada: la semana PMO cierra en jueves.** Se verificó con el contrato GDLC25-027: el Performance del miércoles 16-sep trae los valores de la semana que cierra el jueves 17-sep; el del 23-sep, los del jueves 24-sep; y el del 30-sep, los del jueves 01-oct. Es decir, **el archivo del miércoles reporta la semana que cierra el jueves siguiente** (parte de ella aún no ha ocurrido al entregar).
+**Regla acordada: el corte es el jueves y lo indica quien carga el archivo.** Antecedente (verificado con un OPR en 3 cortes): el archivo del miércoles 16-sep trae los valores de la semana que cierra el jueves 17-sep; el del 27-may viene incluso nombrado con sufijo `_260528`, el jueves.
 
 Por tanto:
-- **Semana PMO** = el jueves de cierre. Es la fecha de corte oficial de la plataforma (corte 16-sep → 17-sep; 23-sep → 24-sep; 30-sep → 01-oct).
-- La fecha del nombre del archivo se guarda como **fecha de entrega** y se compara con la anterior.
-- Si el archivo se entrega tarde (después del jueves de cierre), la plataforma lo marca como "entrega tardía" y no lo asigna automáticamente a otra semana: la PMO confirma.
+- **Fecha de corte** = jueves indicado al cargar. La plataforma valida que sea jueves y que no exista otro corte vigente en esa fecha. Para la carga retroactiva, la fecha propuesta es la del archivo + 1 día, sujeta a confirmación (corte 16-sep → 17-sep; 23-sep → 24-sep; 30-sep → 01-oct).
+- La fecha del nombre del archivo se guarda como **fecha de entrega**, solo informativa.
+- Un corte ya existente en esa fecha se trata como reemplazo y exige motivo escrito.
 - El corte oficial se calcula, el usuario lo confirma al cargar.
 - El instructivo del OPR habla de domingo; debe corregirse a jueves.
 
@@ -279,7 +279,7 @@ Severidad: **B** = bloquea la publicación; **A** = advertencia que exige justif
 | Q-15 | Campos maestros y contractuales estables (base, contratado, proveedor, responsable, plazo, AIR, % anticipo): un cambio muestra valor anterior y nuevo | A | Proveedor, responsable, base y contratado: 0 cambios en 4 meses. Plazo: 3 contratos; AIR: 2; % anticipo: 1 |
 | Q-16 | Proveedor y responsable resueltos al catálogo | A | 31 valores, 28 distintos |
 | Q-17 | OPR recibido para cada contrato ACTIVO | A | **Diferida** (no aplica en Fase 1) |
-| Q-18 | Fecha de entrega coherente con el jueves de cierre derivado (§2.2); entrega tardía marcada | A | Tres fechas distintas |
+| Q-18 | La fecha de corte indicada es jueves y no existe otro corte vigente en esa fecha | B | Tres fechas distintas en los archivos |
 | Q-19 | Vencimiento de fianzas dentro del umbral | I | **Fuera de alcance** (depende del OPR) |
 | Q-20 | Archivos con macros o vínculos externos: se registran y se leen en modo aislado | I | 3 vínculos externos en el Performance |
 | Q-21 | Reescritura de meses cerrados de la curva mensual: se informa con la magnitud | I | **Confirmada**: el monto de mar-26 pasa de $201.3 M (junio) a $58.5 M (septiembre); abr-26 de $201.0 M a $272.0 M. La serie solo cambia en bloque cada mes |
@@ -373,7 +373,7 @@ Respuestas de la PMO del 02-oct-2026:
 |---|---|---|---|
 | D-01 | Solo se carga el Performance; el OPR queda **fuera de alcance** (existen los de 2026 pero no se usarán) | 02-oct-2026 | Sin conciliación contra el origen ni PPC, riesgos, fianzas o causas. El modelo puede reservar sitio por si se retoma |
 | D-02 | Curva mensual: meses cerrados = facturación real, meses futuros = programado; se distingue por la fecha de corte | 02-oct-2026 | Usable en flujo mensual con etiqueta "no conciliado"; fuera de KPI ejecutivos |
-| D-03 | La semana PMO cierra en jueves; el archivo del miércoles reporta la semana que cierra el jueves siguiente | 02-oct-2026 | Fecha de corte = jueves derivado; el nombre del archivo es fecha de entrega |
+| D-03 | El corte es el jueves y es un dato de entrada que indica quien carga | 02-oct-2026 | La plataforma solo valida que sea jueves; sin derivación ni "entrega tardía" |
 | D-04 | La única causa externa es LA (liberación de áreas por el aeropuerto) | 02-oct-2026 | Aplica al ranking cuando exista el dato |
 | D-05 | Contrato crítico = SPI < 0.90 o % OENE ≥ 10 % o KPI de plazo en crítico | 02-oct-2026 | Base de KPI ejecutivos |
 | D-06 | ACTIVO equivale a en ejecución; el CPI se redefine como Índice de Estimación = E/EV | previas | Ver §3.1 y §3.3 |

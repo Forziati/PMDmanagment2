@@ -22,7 +22,7 @@ Documento hermano: `diccionario_datos_metricas.md` (detalle campo por campo, reg
 3. El **estatus se edita en ambos sentidos** (dos contratos pasaron de ACTIVO a TERMINADO y volvieron) y los KPI del Excel tratan ACTIVO como "SIN INICIAR". Los totales del portafolio se movieron por captura, no por la obra.
 4. Los KPI de plazo del Excel dependen de la fecha en que se abre el archivo (`HOY()`) y marcan como "vencidos" a contratos terminados.
 5. La plantilla **cambia entre semanas** (el 16-sep traía dos columnas extra que desplazaron todas las demás).
-6. El archivo del miércoles reporta la semana que **cierra el jueves siguiente**.
+6. **El corte es el jueves y es un dato de entrada**: quien carga indica la fecha del corte al subir el archivo (el nombre del archivo, de miércoles, es solo la fecha de entrega).
 7. Con 6 cortes de mayo a septiembre aparecieron **tres versiones de plantilla**, **17 líneas en PLANEACIÓN que desaparecieron sin explicación** y una curva mensual que se **reescribe** de un mes a otro.
 
 **Alcance de la primera versión.** Cargas con validación, historia semanal, comparativo entre cortes, resumen ejecutivo, ficha de contrato, vista por proveedor y portafolio. **Modelo de acceso simple: una persona carga el Excel y cualquiera con el enlace consulta la información** (sin cuentas, roles ni permisos por fila). Quedan fuera: OPR, PPC, riesgos, causas de no cumplimiento y fianzas.
@@ -115,7 +115,7 @@ Se pasa de "el estado de hoy, que se sobrescribe" a "la trayectoria de cada cont
 | Capa | Responsabilidad | Regla de oro |
 |---|---|---|
 | **Fuente** | El Excel Performance, con huella de plantilla | La plataforma no corrige el Excel: lo rechaza, lo observa o lo acepta con justificación |
-| **Ingesta** | Leer sin ejecutar macros ni actualizar vínculos; localizar la tabla por nombre; mapear por encabezado y por versión de plantilla; derivar el corte (jueves); validar; resolver identidades; pedir confirmación con motivo | Es **idempotente**: cargar dos veces el mismo archivo no cambia nada |
+| **Ingesta** | Leer sin ejecutar macros ni actualizar vínculos; localizar la tabla por nombre; mapear por encabezado y por versión de plantilla; recibir la fecha del corte (jueves) como dato de entrada y validarla; validar; resolver identidades; pedir confirmación con motivo | Es **idempotente**: cargar dos veces el mismo archivo no cambia nada |
 | **Almacén histórico** | Crudo inmutable (permite reprocesar años después), conformado (maestros y hechos limpios), derivados (cambios entre cortes y series) | Nunca se sobrescribe; solo se añade |
 | **Capa semántica** | Define una sola vez cada KPI, umbral y alerta; recalcula todo desde medidas base | **La lógica de negocio no vive en las pantallas** |
 | **Experiencia** | Muestra y navega; no calcula | Cualquier número en pantalla tiene su definición a un clic |
@@ -176,7 +176,7 @@ Contras de Metabase a tener presentes: soporte solo de la comunidad, mantenimien
 1. **Solo se añade**: nada se sobrescribe; una recarga crea una nueva versión.
 2. **Medidas base, no ratios**: SPI, Índice de Estimación y porcentajes se recalculan con precisión completa y siempre como ratio de sumas.
 3. **Identidad interna estable**, independiente de lo que diga el Excel.
-4. **Tres tiempos**: corte (semana PMO, jueves de cierre), entrega (fecha del archivo) y versión de carga.
+4. **Tres tiempos**: corte (jueves; dato de entrada indicado por quien carga), fecha de entrega (la del archivo) y versión de carga.
 5. **Procedencia por valor**: fórmula vinculada, fórmula local, valor pegado o capturado.
 6. **Los valores del Excel se guardan como "reportado"**; los oficiales son los recalculados.
 
@@ -190,12 +190,12 @@ Contras de Metabase a tener presentes: soporte solo de la comunidad, mantenimien
 - **Equivalencia de contrato**: alias, divisiones y fusiones.
 - **Proveedor**: ID interno y tabla de alias (28 escrituras para 26 proveedores reales).
 - **Persona**: responsable de proyecto y responsable de obra, con asignación vigente por periodo.
-- **Calendario**: semana PMO (cierre jueves), mes, trimestre, año.
+- **Calendario**: semana (corte en jueves), mes, trimestre, año.
 - **Catálogos**: estatus (PLANEACIÓN, ACTIVO = en ejecución, TERMINADO), tipo de presupuesto, niveles WBS.
 
 **Hechos (crecen sin parar):**
 - **Carga**: archivo, huella, versión de plantilla, cuándo, resultado, estado.
-- **Corte**: semana PMO; estado (abierto, cerrado, reabierto); apunta a la carga vigente.
+- **Corte**: fecha (jueves, dato de entrada); estado (abierto, cerrado, reabierto); apunta a la carga vigente.
 - **Foto semanal del contrato**: una fila por contrato y corte con medidas base (presupuesto base y contratado, convenios, ODC potencial, PV, EV, Estimado, Facturado, OENE contratada y por regularizar, fechas, estatus, responsables).
 - **Curva mensual**: monto por contrato, mes y corte, con tipo (real, parcial, programado).
 - **Confirmación de estatus**: cambio detectado, motivo escrito por quien carga y fecha.
@@ -245,7 +245,7 @@ Corte A ─ Corte B  ⇒  Cambio por contrato
 1. **Recepción**: quien carga sube el archivo. Se registra cuándo y la huella.
 2. **Lectura segura**: sin ejecutar macros ni actualizar vínculos externos; la tabla se localiza por su nombre y las columnas por encabezado normalizado. Las filas plantilla, los totales de la fila 2 y el bloque de cálculos inferior se ignoran.
 3. **Detección de plantilla**: se compara el conjunto de encabezados con las versiones conocidas. Columnas desconocidas van a un área "no mapeada" y generan advertencia; no bloquean.
-4. **Corte**: se deriva el jueves de cierre a partir de la fecha de entrega (el miércoles reporta la semana que cierra el jueves siguiente) y el usuario lo confirma. Entrega después del jueves de cierre: "entrega tardía", confirmación manual.
+4. **Corte**: quien carga indica la **fecha del corte, que debe ser jueves**. La plataforma solo valida que sea jueves y que no exista ya un corte vigente en esa fecha; no la deduce del nombre del archivo.
 5. **Validación por niveles** (detalle en el diccionario): estructural, integridad, reglas de negocio, consistencia contra el corte anterior y recálculo contra los valores reportados.
 6. **Revisión**: la PMO ve hallazgos clasificados en **bloqueantes**, **advertencias** (se aceptan con justificación escrita) e **informativos**.
 7. **Confirmaciones**: todo cambio de estatus exige confirmación escrita con motivo de quien carga; pasar de TERMINADO a ACTIVO se marca además como reversión.
@@ -260,7 +260,7 @@ Corte A ─ Corte B  ⇒  Cambio por contrato
 | Reapertura de un corte cerrado | Requiere motivo escrito; se recalcula todo lo posterior |
 | Carga retroactiva 2026 | Se carga como histórico, etiquetada "reconstruido", con mapa por versión de plantilla |
 | Contrato que desaparece | No se interpreta como terminado; genera alerta de calidad |
-| Entrega tardía | Marcada; la PMO decide a qué corte pertenece |
+| Corte duplicado | Si ya existe un corte vigente en esa fecha, la carga se trata como reemplazo y exige motivo escrito |
 | Valor pegado vs fórmula | Se guarda la procedencia; un cambio de procedencia entre cortes genera aviso informativo |
 
 ### 7.3 Consulta y análisis
@@ -384,7 +384,7 @@ Además se muestran, sin colorear, el número de contratos críticos y el valor 
 - El SPI de un contrato recién iniciado es ruido; se señala cuando hay pocas semanas de avance.
 - El "CPI" del Excel es **Estimado/EV** (confirmado por la PMO) y se muestra como Índice de Estimación, nunca como desempeño de costo.
 - `$ Facturado` incluye el anticipo. En el contrato analizado (GDLC25-027), $743.2 M = $432.8 M de anticipo + $310.4 M de facturado neto. Restar el anticipo teórico (% anticipo × contratado) a `$ Facturado` da una aproximación al facturado neto, **validada solo en un contrato**.
-- La semana más reciente de cada archivo incluye datos del jueves aún no ocurrido al entregar el miércoles; los valores de esa semana son provisionales hasta el siguiente corte.
+- Los valores de la semana más reciente pueden ser provisionales hasta el siguiente corte.
 
 **Se destaca en pantalla:** lo que cambió, lo crónico, lo acelerado, las fechas que se corren y el estado de calidad del dato.
 
@@ -544,7 +544,7 @@ Panel de conteos, lista priorizada con causa, vista agrupada por proveedor, proy
 |---|---|
 | D-01 | Solo Performance; el OPR queda fuera de alcance |
 | D-02 | Curva mensual: meses cerrados reales, futuros programados; no concilia con el OPR |
-| D-03 | La semana PMO cierra en jueves; el archivo del miércoles reporta la semana que cierra el jueves siguiente |
+| D-03 | El corte es el jueves y es un dato de entrada que indica quien carga |
 | D-04 | La única causa externa es LA (liberación de áreas por el aeropuerto) |
 | D-05 | Contrato crítico = SPI < 0.90 o % OENE ≥ 10 % o KPI de plazo crítico |
 | D-06 | ACTIVO = en ejecución; "CPI" = Índice de Estimación = Estimado/EV |
@@ -573,6 +573,6 @@ Panel de conteos, lista priorizada con causa, vista agrupada por proveedor, proy
 
 1. La PMO valida el diccionario y los umbrales.
 2. Se instala y se prueba la herramienta BI propuesta (D-12b).
-3. La regla del jueves queda confirmada (verificada con OPR en 3 cortes; los otros 3 cortes no la pueden probar por no traer fecha propia).
+3. El corte jueves como dato de entrada queda registrado (D-03).
 4. La PMO acepta el plan de corrección de la plantilla de la sección 14.
 5. Se acepta el modelo de acceso por enlace y sus consecuencias (sección 4.4).

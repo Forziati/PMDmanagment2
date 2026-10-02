@@ -558,6 +558,8 @@ Panel de conteos, lista priorizada con causa, vista agrupada por proveedor, proy
 | D-14 | Aparecen todos los contratistas y todo ranking muestra su serie histórica |
 | D-15 | Sin roles, dueños ni usuarios: una persona carga el Excel y quien tenga el enlace consulta |
 | D-12b | Herramienta BI complementaria: Metabase Open Source |
+| D-16 | "Contrato crítico" queda como D-05, sin niveles de gravedad |
+| D-17 | Umbrales de cambio entre cortes: SPI ±0.05, OENE ±1.5 puntos, fin previsto ±14 días |
 
 ### 15.2 Pendientes para cerrar la Fase 1
 

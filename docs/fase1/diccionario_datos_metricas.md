@@ -1,6 +1,6 @@
 # Fase 1 · Diccionario de datos y de métricas
 
-Estado: **borrador v0.6 para validación de la PMO** (incorpora las decisiones de la sección 9) · Alcance inicial: aeropuerto GDL · Base de análisis: **6 cortes de Performance** (27-may, 10-jun, 09-sep, 16-sep, 23-sep y 30-sep-2026) y 1 OPR (contrato GDLC25-027, OC GDL-OC-0007238).
+Estado: **borrador v0.7 para validación de la PMO** (incorpora las decisiones de la sección 9) · Alcance inicial: aeropuerto GDL · Base de análisis: **6 cortes de Performance** (27-may, 10-jun, 09-sep, 16-sep, 23-sep y 30-sep-2026) y 1 OPR (contrato GDLC25-027, OC GDL-OC-0007238).
 
 Este documento no contiene código, SQL ni diseño de pantallas. Define **qué es cada dato, de dónde viene, cómo se valida y cómo lo trata la plataforma**.
 
@@ -387,3 +387,5 @@ Respuestas de la PMO del 02-oct-2026:
 | D-13 | Salud del programa = peor color entre desviación y %OENE de contratos ACTIVO | 02-oct-2026 | Regla de semáforo ejecutivo |
 | D-14 | Aparecen todos los contratistas y todo ranking muestra su serie histórica; sin mínimo para figurar | 02-oct-2026 | Se muestra confianza baja en lugar de ocultar |
 | D-15 | Sin roles, dueños ni usuarios: una persona carga el Excel y quien tenga el enlace consulta | 02-oct-2026 | Sin permisos por fila ni notificaciones por responsable; el enlace es revocable |
+| D-16 | "Contrato crítico" queda como está en D-05, sin niveles de gravedad | 02-oct-2026 | Una sola categoría; el orden de la lista de atención usa criterios cumplidos y SPI, sin etiquetarlos |
+| D-17 | Umbrales de cambio entre cortes: SPI ±0.05, OENE ±1.5 puntos porcentuales, fin previsto ±14 días | 02-oct-2026 | Aprobados como razonables; se reajustan si el uso real muestra ruido |

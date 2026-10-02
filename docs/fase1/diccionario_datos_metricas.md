@@ -1,6 +1,6 @@
 # Fase 1 · Diccionario de datos y de métricas
 
-Estado: **borrador v0.7 para validación de la PMO** (incorpora las decisiones de la sección 9) · Alcance inicial: aeropuerto GDL · Base de análisis: **6 cortes de Performance** (27-may, 10-jun, 09-sep, 16-sep, 23-sep y 30-sep-2026) y 1 OPR (contrato GDLC25-027, OC GDL-OC-0007238).
+Estado: **borrador v0.8 para validación de la PMO** (incorpora las decisiones de la sección 9) · Alcance inicial: aeropuerto GDL · Base de análisis: **6 cortes de Performance** (27-may, 10-jun, 09-sep, 16-sep, 23-sep y 30-sep-2026) y 1 OPR (contrato GDLC25-027, OC GDL-OC-0007238).
 
 Este documento no contiene código, SQL ni diseño de pantallas. Define **qué es cada dato, de dónde viene, cómo se valida y cómo lo trata la plataforma**.
 
@@ -264,7 +264,7 @@ Severidad: **B** = bloquea la publicación; **A** = advertencia que exige justif
 |---|---|---|---|
 | Q-01 | Estructura reconocida (hojas, tabla y encabezados por nombre) | B | Columnas extra el 16-sep |
 | Q-02 | Una sola fila por (aeropuerto, OC) en el corte | B | — |
-| Q-03 | OC presente en contratos ACTIVO y TERMINADO | B | 3 filas sin OC |
+| Q-03 | Contrato ACTIVO sin OC: bloquea. Línea TERMINADA sin OC: advertencia (hoy 3 líneas persisten sin OC en todos los cortes; se propone asignarles un ID de línea). Línea en PLANEACIÓN sin OC: informativa | B / A / I | 3 líneas TERMINADO sin OC; 17 líneas PLANEACIÓN el 27-may |
 | Q-04 | Estatus dentro de la lista cerrada; todo cambio exige confirmación con motivo escrito de quien carga | B | 2 contratos ACTIVO → TERMINADO → ACTIVO (solo el 23-sep) |
 | Q-05 | Un contrato TERMINADO no puede volver a ACTIVO sin confirmación y motivo | B | Ídem |
 | Q-06 | Días en proceso ≥ 0 | B | −177 y −4 |
@@ -280,6 +280,7 @@ Severidad: **B** = bloquea la publicación; **A** = advertencia que exige justif
 | Q-16 | Proveedor y responsable resueltos al catálogo | A | 31 valores, 28 distintos |
 | Q-17 | OPR recibido para cada contrato ACTIVO | A | **Diferida** (no aplica en Fase 1) |
 | Q-18 | La fecha de corte indicada es jueves y no existe otro corte vigente en esa fecha | B | Tres fechas distintas en los archivos |
+| Q-26 | Contrato nuevo respecto al corte anterior: confirmar que no es alias de otro | A | Ningún alta en los 6 cortes |
 | Q-19 | Vencimiento de fianzas dentro del umbral | I | **Fuera de alcance** (depende del OPR) |
 | Q-20 | Archivos con macros o vínculos externos: se registran y se leen en modo aislado | I | 3 vínculos externos en el Performance |
 | Q-21 | Reescritura de meses cerrados de la curva mensual: se informa con la magnitud | I | **Confirmada**: el monto de mar-26 pasa de $201.3 M (junio) a $58.5 M (septiembre); abr-26 de $201.0 M a $272.0 M. La serie solo cambia en bloque cada mes |
@@ -389,3 +390,4 @@ Respuestas de la PMO del 02-oct-2026:
 | D-15 | Sin roles, dueños ni usuarios: una persona carga el Excel y quien tenga el enlace consulta | 02-oct-2026 | Sin permisos por fila ni notificaciones por responsable; el enlace es revocable |
 | D-16 | "Contrato crítico" queda como está en D-05, sin niveles de gravedad | 02-oct-2026 | Una sola categoría; el orden de la lista de atención usa criterios cumplidos y SPI, sin etiquetarlos |
 | D-17 | Umbrales de cambio entre cortes: SPI ±0.05, OENE ±1.5 puntos porcentuales, fin previsto ±14 días | 02-oct-2026 | Aprobados como razonables; se reajustan si el uso real muestra ruido |
+| D-18 | La validación del Performance corre en el navegador de quien carga y se confirma con motivo escrito; sin cuentas, la plataforma no registra quién carga | 02-oct-2026 | Prototipo de Cargas y Calidad |

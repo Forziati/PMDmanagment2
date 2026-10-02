@@ -1,6 +1,6 @@
 # Plataforma de Control Histórico de Contratos (PMO) · Documento Maestro de Fase 1
 
-**Versión 1.2 (propuesta de cierre de Fase 1)** · 02-oct-2026
+**Versión 1.3 · Fase 1 cerrada el 02-oct-2026** · 02-oct-2026
 Alcance: aeropuerto GDL · Fuente única: Excel **Performance** (GAPINFRA-F-074)
 Base de evidencia: **6 cortes de Performance** (27-may, 10-jun, 09-sep, 16-sep, 23-sep y 30-sep-2026) y 1 informe OPR (referencia).
 Documento hermano: `diccionario_datos_metricas.md` (detalle campo por campo, reglas de calidad y registro de decisiones D-01 a D-11).
@@ -10,6 +10,8 @@ Documento hermano: `diccionario_datos_metricas.md` (detalle campo por campo, reg
 ---
 
 ## 0. Resumen ejecutivo
+
+> **Terminología.** En la plataforma, la empresa que ejecuta un contrato se llama **contratista** (el Excel la llama "Proveedor (Nombre Comercial)"; ese nombre de columna solo aparece al leer el archivo). Todo "proveedor" de versiones anteriores de este documento debe leerse como contratista.
 
 **El problema.** Cada semana la PMO consolida a mano en un Excel el desempeño de los contratos del aeropuerto. El archivo es una fotografía: al reemplazarlo se pierde la historia y con ella la capacidad de saber qué empeoró, qué mejoró y qué se repite.
 
@@ -25,7 +27,7 @@ Documento hermano: `diccionario_datos_metricas.md` (detalle campo por campo, reg
 6. **El corte es el jueves y es un dato de entrada**: quien carga indica la fecha del corte al subir el archivo (el nombre del archivo, de miércoles, es solo la fecha de entrega).
 7. Con 6 cortes de mayo a septiembre aparecieron **tres versiones de plantilla**, **17 líneas en PLANEACIÓN que desaparecieron sin explicación** y una curva mensual que se **reescribe** de un mes a otro.
 
-**Alcance de la primera versión.** Cargas con validación, historia semanal, comparativo entre cortes, resumen ejecutivo, ficha de contrato, vista por proveedor y portafolio. **Modelo de acceso simple: una persona carga el Excel y cualquiera con el enlace consulta la información** (sin cuentas, roles ni permisos por fila). Quedan fuera: OPR, PPC, riesgos, causas de no cumplimiento y fianzas.
+**Alcance de la primera versión.** Cargas con validación, historia semanal, comparativo entre cortes, resumen ejecutivo, ficha de contrato, vista por contratista y portafolio. **Modelo de acceso simple: una persona carga el Excel y cualquiera con el enlace consulta la información** (sin cuentas, roles ni permisos por fila). Quedan fuera: OPR, PPC, riesgos, causas de no cumplimiento y fianzas.
 
 ---
 
@@ -38,7 +40,7 @@ Se pasa de "el estado de hoy, que se sobrescribe" a "la trayectoria de cada cont
 | Limitación | Evidencia en los archivos |
 |---|---|
 | No guarda historia consultable | Cada semana es un archivo aislado |
-| Sin identidad estable | Número de contrato vacío, `N/A` o `-` en 5 de 34 filas; 3 filas sin OC ni proveedor |
+| Sin identidad estable | Número de contrato vacío, `N/A` o `-` en 5 de 34 filas; 3 filas sin OC ni contratista |
 | Fórmulas opacas y volátiles | `HOY()` altera los KPI según la fecha de apertura; vínculos externos a otro libro |
 | Datos mezclados en origen | PV, EV y Estimado: fórmulas vinculadas en 20 filas y valores pegados en 11 |
 | KPI con lógica equivocada | ACTIVO = "SIN INICIAR" aunque está en ejecución; el "CPI" documentado al revés |
@@ -57,7 +59,7 @@ Se pasa de "el estado de hoy, que se sobrescribe" a "la trayectoria de cada cont
 | Pregunta original | ¿La responde la v1? | Con qué |
 |---|---|---|
 | ¿Qué contrato empeoró esta semana? | Sí | Comparador de cortes |
-| ¿Qué proveedor ha venido deteriorando su desempeño? | Sí | SPI, %OENE y desviación por proveedor, con su serie histórica completa. Con 26 proveedores reales para 31 contratos, la mayoría tiene un solo contrato, por lo que cada posición muestra su nivel de confianza |
+| ¿Qué contratista ha venido deteriorando su desempeño? | Sí | SPI, %OENE y desviación por contratista, con su serie histórica completa. Con 26 contratistas reales para 31 contratos, la mayoría tiene un solo contrato, por lo que cada posición muestra su nivel de confianza |
 | ¿Cómo evolucionó la OENE en los últimos meses? | Sí | Serie semanal desde la carga histórica de 2026 |
 | ¿Qué contratos están sistemáticamente atrasados? | Sí | SPI persistente bajo umbral y corrimientos de Fin Previsto |
 | ¿Qué responsable tiene más contratos críticos? | Sí | Con asignación vigente por periodo |
@@ -71,7 +73,7 @@ Se pasa de "el estado de hoy, que se sobrescribe" a "la trayectoria de cada cont
 | Dentro (Fase 1 → MVP) | Fuera (decisiones D-01, D-11) |
 |---|---|
 | Excel Performance de GDL, una carga semanal | OPR (existen los de 2026, no se usan) |
-| Contratos, proyectos, proveedores y responsables | PPC |
+| Contratos, proyectos, contratistas y responsables | PPC |
 | Montos, plazos y KPI recalculados por la plataforma | Riesgos, actividades en riesgo, fianzas |
 | Curva mensual (real y programado) con etiqueta "no conciliado" | Causas de no cumplimiento y ranking causal |
 | Historia 2026 (carga retroactiva) | Conciliación contra el origen de los datos |
@@ -87,7 +89,7 @@ Se pasa de "el estado de hoy, que se sobrescribe" a "la trayectoria de cada cont
 | Perfil | Preguntas clave | Qué consulta |
 |---|---|---|
 | **Director** | ¿El programa está sano? ¿Qué requiere mi decisión? ¿Qué cambió esta semana? | Resumen ejecutivo de 2 minutos: salud, KPI clave, contratos críticos, cambios de la semana, tendencia de 12 a 26 semanas |
-| **Dirección de Infraestructura** | ¿Qué proyecto está peor? ¿Dónde se concentra el riesgo financiero? ¿Qué proveedores sostienen el programa? | Portafolio por proyecto y nivel WBS, concentración por proveedor, valor contratado en contratos críticos |
+| **Dirección de Infraestructura** | ¿Qué proyecto está peor? ¿Dónde se concentra el riesgo financiero? ¿Qué contratistas sostienen el programa? | Portafolio por proyecto y nivel WBS, concentración por contratista, valor contratado en contratos críticos |
 | **PMO** (quien carga y revisa) | ¿Qué cambió entre cortes? ¿La carga está limpia? ¿Qué contratos son crónicos? ¿Qué estatus confirmo? | Cargas y calidad, comparador, tendencias, maestros |
 | **Responsable de proyecto** | ¿Cómo van mis contratos? ¿Qué se me desvió? | Sus contratos (filtrando por su nombre), su historia y sus alertas |
 | **Supervisor** | ¿Cuál es el avance real contra lo programado? ¿Qué fecha de término es realista? | Detalle por contrato: PV, EV, SPI, fechas |
@@ -104,7 +106,7 @@ Se pasa de "el estado de hoy, que se sobrescribe" a "la trayectoria de cada cont
 │ Excel        │─▶│ Lectura segura │─▶│ 1. Crudo (inmutable)  │─▶│ KPI oficiales  │─▶│ Resumen      │
 │ Performance  │  │ por encabezado │  │ 2. Conformado         │  │ Motor de       │  │ Qué cambió   │
 │ semanal      │  │ Validación     │  │    (maestros+hechos)  │  │ cambios        │  │ Contrato 360 │
-│ (humano)     │  │ Resolución de  │  │ 3. Derivados          │  │ Umbrales y     │  │ Proveedores  │
+│ (humano)     │  │ Resolución de  │  │ 3. Derivados          │  │ Umbrales y     │  │ Contratistas  │
 │              │  │ identidad      │  │    (cambios, series)  │  │ alertas        │  │ Portafolio   │
 │              │  │ Confirmación   │  │                       │  │                │  │ Cargas/Cal.  │
 └──────────────┘  └────────────────┘  └───────────────────────┘  └────────────────┘  └──────────────┘
@@ -146,7 +148,7 @@ Contras de Metabase a tener presentes: soporte solo de la comunidad, mantenimien
 ### 4.4 Modelo de acceso (D-15)
 - **Carga**: una sola persona sube el Excel. La pantalla de carga se protege con una credencial simple compartida por quien carga; la plataforma registra fecha, archivo y huella de cada carga.
 - **Consulta**: cualquiera con el enlace ve los tableros publicados. No hay cuentas, roles, permisos por fila ni notificaciones por responsable.
-- **Consecuencia aceptada**: los datos (montos contractuales y nombres de responsables y proveedores) son visibles para cualquiera que tenga el enlace. Mitigaciones sin añadir roles: enlace no adivinable, posibilidad de **revocar y regenerar** el enlace, y no publicar el enlace en canales abiertos.
+- **Consecuencia aceptada**: los datos (montos contractuales y nombres de responsables y contratistas) son visibles para cualquiera que tenga el enlace. Mitigaciones sin añadir roles: enlace no adivinable, posibilidad de **revocar y regenerar** el enlace, y no publicar el enlace en canales abiertos.
 
 ---
 
@@ -159,9 +161,9 @@ Contras de Metabase a tener presentes: soporte solo de la comunidad, mantenimien
 | 3 | **Qué Cambió** (comparador de cortes) | Núcleo del sistema: clasifica y explica cada cambio entre dos cortes | MVP |
 | 4 | **Contrato 360** | Ficha con financiero, plazo, desempeño, historia semana a semana y eventos | MVP |
 | 5 | **Portafolio** | Por proyecto y nivel WBS, con mapa de calor y semáforos | MVP |
-| 6 | **Proveedores** | Cartera, tendencia y concentración. Ranking **descriptivo** (sección 9) | MVP |
+| 6 | **Contratistas** | Cartera, tendencia y concentración. Ranking **descriptivo** (sección 9) | MVP |
 | 7 | **Tendencias** | Series de tiempo libres y comparación de periodos | MVP (básico) |
-| 8 | **Maestros** | Contratos, proveedores, responsables, alias, fusiones y vigencias | MVP |
+| 8 | **Maestros** | Contratos, contratistas, responsables, alias, fusiones y vigencias | MVP |
 | 9 | **Parámetros** | Umbrales, catálogos y revocación o regeneración del enlace público | MVP |
 | 10 | **Flujo mensual** | Curva real y programada por mes, con etiqueta "no conciliado" | Posterior |
 | 11 | **Responsables** | Carga y condición de contratos por persona (uso de gestión, no disciplinario) | Posterior |
@@ -185,10 +187,10 @@ Contras de Metabase a tener presentes: soporte solo de la comunidad, mantenimien
 - **Aeropuerto** (IATA).
 - **Proyecto** (código `29INFRA - GDL121`, nombre) bajo aeropuerto; 8 en GDL.
 - **Clasificación**: Presupuesto (ADP/OPEX/INVERSIÓN/PMD), Dirección Gestora, Nivel I y Nivel II (WBS).
-- **Contrato** (también "línea de control"): clave interna; Orden de Compra como identificador natural junto con el aeropuerto; número de contrato como atributo; alcance; proveedor; proyecto.
-- **Alcance sin contratar**: línea sin OC (estatus PLANEACIÓN o filas hoy sin proveedor); necesita un **ID de línea** asignado por la PMO.
+- **Contrato** (también "línea de control"): clave interna; Orden de Compra como identificador natural junto con el aeropuerto; número de contrato como atributo; alcance; contratista; proyecto.
+- **Alcance sin contratar**: línea sin OC (estatus PLANEACIÓN o filas hoy sin contratista); necesita un **ID de línea** asignado por la PMO.
 - **Equivalencia de contrato**: alias, divisiones y fusiones.
-- **Proveedor**: ID interno y tabla de alias (28 escrituras para 26 proveedores reales).
+- **Contratista**: ID interno y tabla de alias (28 escrituras para 26 contratistas reales).
 - **Persona**: responsable de proyecto y responsable de obra, con asignación vigente por periodo.
 - **Calendario**: semana (corte en jueves), mes, trimestre, año.
 - **Catálogos**: estatus (PLANEACIÓN, ACTIVO = en ejecución, TERMINADO), tipo de presupuesto, niveles WBS.
@@ -205,13 +207,13 @@ Contras de Metabase a tener presentes: soporte solo de la comunidad, mantenimien
 **Derivados (se recalculan y se guardan):**
 - **Cambio entre cortes** por contrato: clasificación, magnitud y causa.
 - **Series de tiempo** por KPI y contrato.
-- **Agregados** por proyecto, proveedor y programa.
+- **Agregados** por proyecto, contratista y programa.
 
 **Reservados para el futuro** (no se construyen): convenios como eventos, fianzas, riesgos, PPC, causas, serie semanal del OPR.
 
 ### 6.3 Relaciones
 ```
-Aeropuerto 1─N Proyecto 1─N Contrato N─1 Proveedor
+Aeropuerto 1─N Proyecto 1─N Contrato N─1 Contratista
 Contrato 1─N FotoSemanal N─1 Corte N─1 Carga(vigente)
 Contrato 1─N CurvaMensual (por corte)
 Contrato N─N Persona (asignación con vigencia)
@@ -222,7 +224,7 @@ Corte A ─ Corte B  ⇒  Cambio por contrato
 ### 6.4 Cómo se conserva la historia
 - El **crudo** es inmutable y permite reconstruir todo si cambia una regla.
 - Una recarga de un corte marca la nueva versión como vigente; las anteriores siguen consultables (modo auditoría).
-- Los atributos que cambian (responsable, proveedor, proyecto) se guardan con vigencia, de modo que "¿qué responsable tuvo más críticos en marzo?" no cambie por una reasignación posterior.
+- Los atributos que cambian (responsable, contratista, proyecto) se guardan con vigencia, de modo que "¿qué responsable tuvo más críticos en marzo?" no cambie por una reasignación posterior.
 - Cada carga registra la versión de plantilla y de reglas con que se interpretó.
 
 ### 6.5 Cómo se evitan los duplicados
@@ -249,7 +251,7 @@ Corte A ─ Corte B  ⇒  Cambio por contrato
 5. **Validación por niveles** (detalle en el diccionario): estructural, integridad, reglas de negocio, consistencia contra el corte anterior y recálculo contra los valores reportados.
 6. **Revisión**: la PMO ve hallazgos clasificados en **bloqueantes**, **advertencias** (se aceptan con justificación escrita) e **informativos**.
 7. **Confirmaciones**: todo cambio de estatus exige confirmación escrita con motivo de quien carga; pasar de TERMINADO a ACTIVO se marca además como reversión.
-8. **Resolución de identidad**: contratos, proveedores o personas nuevos o desconocidos pasan a una cola de revisión.
+8. **Resolución de identidad**: contratos, contratistas o personas nuevos o desconocidos pasan a una cola de revisión.
 9. **Publicación**: se escriben los hechos conformados, se calculan los derivados y el corte se marca como cerrado. Un corte en revisión no es visible en el enlace público.
 10. **Aviso en pantalla**: resumen de los cambios de la semana en el Resumen Ejecutivo (sin envío de correos por responsable).
 
@@ -280,13 +282,13 @@ Quien consulta solo ve cortes publicados. Todo número muestra tendencia y varia
 ### 8.2 Navegación y filtros globales
 ```
 ┌─ Corte: [Sem 01-oct ▾]   Comparar con: [Sem 24-sep ▾]   Calidad: ● 2 advertencias ──┐
-├─ Proyecto ▾  Nivel I ▾  Nivel II ▾  Proveedor ▾  Responsable ▾  Estatus ▾  Presupuesto ▾ ─┤
+├─ Proyecto ▾  Nivel I ▾  Nivel II ▾  Contratista ▾  Responsable ▾  Estatus ▾  Presupuesto ▾ ─┤
 ├────────────┬─────────────────────────────────────────────────────────────────────┤
 │ Resumen    │                                                                     │
 │ Qué cambió │        Área de contenido (filtros persistentes y cruzados)          │
 │ Portafolio │                                                                     │
 │ Contratos  │                                                                     │
-│ Proveedores│                                                                     │
+│ Contratistas│                                                                     │
 │ Tendencias │                                                                     │
 │ Calidad    │                                                                     │
 │ Admin      │                                                                     │
@@ -333,7 +335,7 @@ Comportamiento tipo Power BI: filtros globales persistentes, filtrado cruzado, d
 
 **C. Contrato 360**
 ```
-┌ GDLC25-027 · OC GDL-OC-0007238 · Proyecto GDL121 · Proveedor X ● En ejecución ┐
+┌ GDLC25-027 · OC GDL-OC-0007238 · Proyecto GDL121 · Contratista X ● En ejecución ┐
 ├ Financiero ─────────────┬ Plazo ─────────────────┬ Desempeño ───────────────┤
 │ Base      $1,082 M      │ AIR        04-ago-2025 │ SPI 0.94 ▼               │
 │ Contratado $1,082 M     │ Fin orig.  16-nov-2027 │ Índice estimación 0.96   │
@@ -367,7 +369,7 @@ Definiciones oficiales y umbrales: ver `diccionario_datos_metricas.md` §6.
 | **Base (del Excel)** | Presupuesto base y contratado, convenios, ODC potencial, PV, EV, Estimado, Facturado, OENE contratada y por regularizar, estimaciones en revisión, fechas (AIR, fin original, conveniado, previsto), anticipo |
 | **Derivadas (las recalcula la plataforma)** | SPI (ΣEV/ΣPV), **Índice de Estimación** (ΣE/ΣEV), % de avance programado, ganado y estimado, OENE $ y %, desviación $ y %, % de cambios por convenios, días para fin, % de tiempo transcurrido, % de incremento de plazo, corrimientos de Fin Previsto |
 | **Tendencia** | Variación semanal, media móvil, semanas consecutivas de deterioro, aceleración |
-| **Ejecutivas** | Salud del programa (semáforo según la regla D-13, abajo), SPI del programa, valor contratado en contratos críticos, número de contratos críticos y su cambio, OENE y su tendencia, crecimiento del presupuesto contra el base, contratos por vencer sin cierre, concentración por proveedor |
+| **Ejecutivas** | Salud del programa (semáforo según la regla D-13, abajo), SPI del programa, valor contratado en contratos críticos, número de contratos críticos y su cambio, OENE y su tendencia, crecimiento del presupuesto contra el base, contratos por vencer sin cierre, concentración por contratista |
 
 **Contrato crítico (D-05):** SPI < 0.90, o % OENE ≥ 10 %, o KPI de plazo en crítico.
 
@@ -394,11 +396,11 @@ Además se muestran, sin colorear, el número de contratos críticos y el valor 
 
 **Decisión de la PMO (D-14): aparecen todos los contratistas y todo ranking muestra su serie histórica.** No hay mínimo de contratos o semanas para figurar.
 
-**Realidad de los datos:** en GDL hay 31 contratos con OC y 26 proveedores reales; 22 tienen un solo contrato y solo uno tiene tres. Un proveedor con un solo contrato joven puede subir o bajar mucho por azar, así que la plataforma compensa **mostrando**, no ocultando: cada posición lleva un indicador de confianza y su tendencia histórica. Como el OPR queda fuera, tampoco hay causas de no cumplimiento para separar lo atribuible al contratista de lo externo.
+**Realidad de los datos:** en GDL hay 31 contratos con OC y 26 contratistas reales; 22 tienen un solo contrato y solo uno tiene tres. Un contratista con un solo contrato joven puede subir o bajar mucho por azar, así que la plataforma compensa **mostrando**, no ocultando: cada posición lleva un indicador de confianza y su tendencia histórica. Como el OPR queda fuera, tampoco hay causas de no cumplimiento para separar lo atribuible al contratista de lo externo.
 
 **Propuesta:**
 1. **V1: ranking a nivel de contrato**, por segmento comparable (Nivel I × Nivel II: construcción frente a diseño, edificación frente a campo de vuelo), con SPI, % OENE, desviación, corrimientos de fecha y crecimiento por convenios.
-2. **Vista por proveedor**: **todos los contratistas, con posición**, cartera, valor contratado, número de contratos críticos y **serie histórica** de SPI, % OENE y desviación. Los de poca base llevan la etiqueta "confianza baja" (menos de 3 contratos o menos de 12 semanas de historia) y se pueden ordenar o filtrar, pero **nunca se excluyen**.
+2. **Vista por contratista**: **todos los contratistas, con posición**, cartera, valor contratado, número de contratos críticos y **serie histórica** de SPI, % OENE y desviación. Los de poca base llevan la etiqueta "confianza baja" (menos de 3 contratos o menos de 12 semanas de historia) y se pueden ordenar o filtrar, pero **nunca se excluyen**.
 3. **Sin score único opaco**: cuatro o cinco dimensiones visibles; un compuesto opcional, ajustable y desglosable.
 4. **Evitar sesgos sin esconder a nadie**: indicador de confianza en cada posición, ajuste por madurez (los contratos jóvenes pesan menos), indicadores sobre ventanas de varias semanas y no sobre una sola, suavizado estadístico para que pocos datos no den extremos, y doble vista ponderada por valor y por conteo para que un contrato gigante no domine.
 5. **Tendencias**: trayectoria de las últimas N semanas y alerta por deterioro sostenido, no por una mala semana.
@@ -417,7 +419,7 @@ Compara dos cortes cualesquiera (por defecto el último contra el anterior), **c
 |---|---|---|
 | **Nuevo** | Existe en B, no en A, y no es alias de otro | Distinguir alta real de reaparición |
 | **Salió** | Existe en A, no en B | **No asumir cierre**: cerrado formalmente, renombrado, o desaparecido sin explicación (alerta de calidad) |
-| **Cambio estructural** | Alias, división, fusión; cambio de proveedor, proyecto o responsable | Evita que un cambio de identidad parezca mejora o deterioro |
+| **Cambio estructural** | Alias, división, fusión; cambio de contratista, proyecto o responsable | Evita que un cambio de identidad parezca mejora o deterioro |
 | **Reversión de estatus** | TERMINADO → ACTIVO, o PLANEACIÓN → TERMINADO | Requiere confirmación con motivo antes de entrar al análisis |
 | **Sin cambio material** | Dentro de las tolerancias | Se resume, no se lista |
 | **Mejora** | Movimiento favorable material | Distinguir sostenida de puntual |
@@ -438,7 +440,7 @@ Compara dos cortes cualesquiera (por defecto el último contra el anterior), **c
 - **Corrimiento en cadena**: Fin Previsto se mueve semana tras semana.
 - **Reversión de estatus**.
 - **Silencio**: EV y Estimado idénticos durante N semanas en un contrato ACTIVO.
-- **Contagio**: varios contratos del mismo proveedor, proyecto o responsable empeoran a la vez.
+- **Contagio**: varios contratos del mismo contratista, proyecto o responsable empeoran a la vez.
 - **Crecimiento contractual**: % de cambios acercándose al límite del 20 %.
 
 ### 11.5 Evidencia real en 6 cortes
@@ -476,7 +478,7 @@ El programa deterioró de mayo a septiembre, tocó rojo el 09-sep y desde entonc
 Las hojas ODC y Facturas son **idénticas en los 6 cortes** (de mayo a septiembre): confirmado que no alimentan nada. La lectura por encabezado resuelve los tres formatos; hay que mantener un mapa por versión para la carga retroactiva.
 
 ### 11.8 Entregables del módulo
-Panel de conteos, lista priorizada con causa, vista agrupada por proveedor, proyecto o responsable, detalle causal por contrato, exportable a "minuta de cambios" y registro de cada comparación estándar para auditar qué se señaló.
+Panel de conteos, lista priorizada con causa, vista agrupada por contratista, proyecto o responsable, detalle causal por contrato, exportable a "minuta de cambios" y registro de cada comparación estándar para auditar qué se señaló.
 
 ---
 
@@ -511,10 +513,10 @@ Panel de conteos, lista priorizada con causa, vista agrupada por proveedor, proy
 
 | Fase | Contenido | Criterio de salida |
 |---|---|---|
-| **1. Arquitectura** (esta) | Documento maestro, diccionario, decisiones D-01 a D-15 y prueba con 6 cortes de Performance | Documentos aceptados por la PMO |
+| **1. Arquitectura** ✓ **Cerrada el 02-oct-2026** | Documento maestro, diccionario, decisiones D-01 a D-15 y prueba con 6 cortes de Performance | Documentos aceptados por la PMO |
 | **2. Datos** | Modelo conformado definitivo, maestros y alias, catálogo de reglas, mapa de versiones de plantilla, **carga retroactiva de los Performance de 2026** (≈ 39 cortes, etiquetada "reconstruida") | Los cortes históricos cargados concilian con lo que la PMO reportó en su momento; cifras de control firmadas |
 | **3. Backend** | Pipeline de carga con validación, confirmación e idempotencia; capa semántica; motor de cambios; registro de cargas; publicación del enlace de consulta | Una carga completa de punta a punta; pruebas de regresión con cortes reales |
-| **4. Frontend** | Orden: Cargas y Calidad → Resumen → Qué Cambió → Contrato 360 → Portafolio → Proveedores → Tendencias | La PMO prepara la junta semanal desde la plataforma sin abrir el Excel para analizar |
+| **4. Frontend** | Orden: Cargas y Calidad → Resumen → Qué Cambió → Contrato 360 → Portafolio → Contratistas → Tendencias | La PMO prepara la junta semanal desde la plataforma sin abrir el Excel para analizar |
 | **5. Analytics** | Ranking descriptivo de contratos, alertas de riesgo emergente, flujo mensual | Alertas validadas contra casos históricos ya conocidos ("¿habría detectado lo que ya sabíamos?") |
 | **6. Producción** | Operación en paralelo con el Excel (4 a 8 semanas), endurecimiento de seguridad, respaldo y recuperación, capacitación, soporte | Aceptación formal; el Excel deja de usarse para análisis |
 
@@ -531,7 +533,7 @@ Panel de conteos, lista priorizada con causa, vista agrupada por proveedor, proy
 5. Corregir el instructivo del "CPI" (es Estimado/EV) y renombrarlo "Índice de Estimación".
 6. Quitar `HOY()` de los KPI o sustituirlo por una fecha de corte capturada.
 7. Hacer obligatorio `Acta de Entrega Recepción` al terminar.
-8. Catálogos desplegables para proveedor y responsable.
+8. Catálogos desplegables para contratista y responsable.
 9. Impedir días en proceso negativos.
 10. Retirar o reparar las hojas ODC y Facturas, que no alimentan nada.
 
@@ -560,6 +562,11 @@ Panel de conteos, lista priorizada con causa, vista agrupada por proveedor, proy
 | D-12b | Herramienta BI complementaria: Metabase Open Source |
 | D-16 | "Contrato crítico" queda como D-05, sin niveles de gravedad |
 | D-17 | Umbrales de cambio entre cortes: SPI ±0.05, OENE ±1.5 puntos, fin previsto ±14 días |
+| D-18 | La validación del Performance se hace al cargar, con motivo escrito; sin cuentas no se registra quién carga |
+| D-19 | Las advertencias recurrentes (terminados sin acta, holgura vacía) se mantienen como advertencias |
+| D-20 | "Proveedores" son **Contratistas** en toda la plataforma |
+| D-21 | Reglas Q-03 (por estatus) y Q-26 (contrato nuevo) aceptadas |
+| D-22 | Fase 1 cerrada el 02-oct-2026 |
 
 ### 15.2 Pendientes para cerrar la Fase 1
 
@@ -571,10 +578,38 @@ Panel de conteos, lista priorizada con causa, vista agrupada por proveedor, proy
 
 ---
 
-## 16. Criterios de aceptación de la Fase 1
+## 16. Cierre de la Fase 1
 
-1. La PMO valida el diccionario y los umbrales.
-2. Se instala y se prueba la herramienta BI propuesta (D-12b).
-3. El corte jueves como dato de entrada queda registrado (D-03).
-4. La PMO acepta el plan de corrección de la plantilla de la sección 14.
-5. Se acepta el modelo de acceso por enlace y sus consecuencias (sección 4.4).
+La Fase 1 se cierra el 02-oct-2026 con el resultado siguiente.
+
+| Criterio | Estado |
+|---|---|
+| El diccionario y los umbrales están validados por la PMO | ✓ Validados por etapas (D-01 a D-22) |
+| Se instala y se prueba la herramienta BI propuesta (Metabase OSS) | Pasa a la Fase 2 |
+| El corte de los jueves es un dato de entrada | ✓ D-03 |
+| La PMO acepta el plan de corrección de la plantilla (sección 14) | Pasa a la Fase 2 |
+| Se acepta el modelo de acceso por enlace y sus consecuencias (sección 4.4) | ✓ D-15 |
+
+**Sin decisiones abiertas.** Quedan dos tareas que no son decisiones sino ejecución, y pasan a la Fase 2: instalar y probar Metabase, y acordar con la PMO el calendario de los cambios de plantilla.
+
+---
+
+## 17. Entregables de la Fase 1
+
+| Entregable | Dónde |
+|---|---|
+| Documento maestro (este documento) | `docs/fase1/documento_maestro_fase1.md` |
+| Diccionario de datos y de métricas, con reglas de calidad y registro de decisiones | `docs/fase1/diccionario_datos_metricas.md` |
+| Prototipo: Resumen ejecutivo y Contrato 360, con datos reales de 6 cortes | [Control de Contratos GDL](https://claude.ai/artifact/E6rdCSpL2vi7ARBBzcndWW) |
+| Prototipo: Cargas y calidad, que valida Performance reales en el navegador | [Cargas y Calidad GDL](https://claude.ai/artifact/FrwaxQCUWeyc4ufwGTdLGD) |
+| Prototipo: Explorador de gráficas por métrica, agrupación y estatus | [Explorador de Contratos GDL](https://claude.ai/artifact/9GtWk3EkkftBcc4ejp7rhE) |
+
+Los prototipos son privados (solo los abre quien los creó y con quien se compartan) y no guardan datos.
+
+## 18. Qué sigue: Fase 2 (Datos)
+
+1. Cargar los Performance semanales de 2026 que existan, con el mapa de versiones de plantilla (V1, V2 y V3) y la etiqueta "reconstruida".
+2. Construir el maestro de contratistas (alias) y de contratos (clave OC, ID de línea para alcances sin contratar).
+3. Conciliar los cortes cargados contra lo que la PMO reportó en su momento.
+4. Instalar Metabase y conectar la capa semántica.
+5. Acordar con la PMO el calendario de correcciones a la plantilla.

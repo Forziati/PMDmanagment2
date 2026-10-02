@@ -1,6 +1,6 @@
 # Fase 1 · Diccionario de datos y de métricas
 
-Estado: **borrador v0.8 para validación de la PMO** (incorpora las decisiones de la sección 9) · Alcance inicial: aeropuerto GDL · Base de análisis: **6 cortes de Performance** (27-may, 10-jun, 09-sep, 16-sep, 23-sep y 30-sep-2026) y 1 OPR (contrato GDLC25-027, OC GDL-OC-0007238).
+Estado: **versión 0.9, cerrada con la Fase 1** (incorpora las decisiones D-01 a D-20 de la sección 9) · Alcance inicial: aeropuerto GDL · Base de análisis: **6 cortes de Performance** (27-may, 10-jun, 09-sep, 16-sep, 23-sep y 30-sep-2026) y 1 OPR (contrato GDLC25-027, OC GDL-OC-0007238).
 
 Este documento no contiene código, SQL ni diseño de pantallas. Define **qué es cada dato, de dónde viene, cómo se valida y cómo lo trata la plataforma**.
 
@@ -8,12 +8,14 @@ Este documento no contiene código, SQL ni diseño de pantallas. Define **qué e
 
 ## 0. Convenciones
 
+**Terminología.** En la plataforma el término oficial es **contratista**; el Excel lo llama `Proveedor (Nombre Comercial)` y ese nombre de columna se conserva solo para leer el archivo.
+
 **Clases de campo** (columna "Clase"):
 
 | Clase | Significado |
 |---|---|
 | **ID** | Identifica a una entidad (aeropuerto, proyecto, contrato). |
-| **DIM** | Atributo descriptivo que cambia lento (responsable, proveedor, estatus). Se guarda con vigencia. |
+| **DIM** | Atributo descriptivo que cambia lento (responsable, contratista, estatus). Se guarda con vigencia. |
 | **CAP** | Dato capturado por una persona. Es el más propenso a error. |
 | **OPR** | Dato que nace en el informe OPR y el Performance solo lo replica. |
 | **CALC** | Calculado en el Excel. La plataforma lo **ignora como fuente** y lo recalcula; el valor del Excel se guarda como "reportado" para conciliar. |
@@ -61,8 +63,8 @@ Este documento no contiene código, SQL ni diseño de pantallas. Define **qué e
 | Aeropuerto | Código IATA | Hoy solo GDL. |
 | Proyecto | Código de proyecto (`29INFRA - GDL121`) | Asignado por la PMO. |
 | Contrato / línea de control | **(Aeropuerto, Orden de Compra)** | La OC fue única en 31 de 31 filas y estable en los 3 cortes. `Contrato` queda como atributo: 5 de 34 filas tienen valor vacío, `N/A` o `-`. |
-| Alcance sin contratar | **ID de línea** (a crear) | 3 filas sin OC ni proveedor hoy no tienen identidad. Se propone un ID asignado por la PMO. |
-| Proveedor | ID interno + alias | 31 valores en 28 distintos; variantes por comas y mayúsculas. |
+| Alcance sin contratar | **ID de línea** (a crear) | 3 filas sin OC ni contratista hoy no tienen identidad. Se propone un ID asignado por la PMO. |
+| Contratista | ID interno + alias | 31 valores en 28 distintos; variantes por comas y mayúsculas. |
 | Persona | ID interno + alias | Variantes de nombre y errores de captura. |
 
 ### 2.2 Tiempo: el corte es el jueves y es un dato de entrada (D-03)
@@ -103,7 +105,7 @@ Leyenda de "Verif.": ✔ = coincide exactamente con el OPR del contrato GDLC25-0
 | Alcance | CAP | Texto libre; único por fila. | Atributo del contrato. |
 | Orden de Compra | **ID** | Obligatoria salvo alcances sin contratar; única por aeropuerto. | **Clave del contrato.** |
 | Contrato | DIM | Formato `GDLC25-027`; rechazar `N/A` y `-` como valores válidos. | Atributo. |
-| Proveedor (Nombre Comercial) | DIM | Debe resolverse al catálogo; el instructivo pide razón social completa y el encabezado dice nombre comercial (contradicción). | Entidad Proveedor + alias. |
+| Proveedor (Nombre Comercial); en la plataforma, **Contratista** | DIM | Debe resolverse al catálogo; el instructivo pide razón social completa y el encabezado dice nombre comercial (contradicción). | Entidad Contratista + alias. |
 | Estatus | DIM | Lista cerrada: **PLANEACIÓN, ACTIVO (= en ejecución), TERMINADO**. `EN EJECUCIÓN` queda como alias de ACTIVO. Todo cambio de estatus pasa por aprobación de la PMO (ver Q-04, Q-05). | Dimensión con vigencia y log de aprobación. |
 
 ### 3.2 Contractual y financiero
@@ -193,7 +195,7 @@ Hojas: `Instrucciones`, `ES | Seguimiento de Ejecución`, `ES | Lean`, `ES | OPR
 | Campo | Clase | Regla / tratamiento |
 |---|---|---|
 | Aeropuerto, Código de proyecto, Nombre del proyecto | ID | Debe coincidir con Performance. |
-| Contrato, Orden de Compra, Proveedor, Serie PMD | ID/DIM | Debe coincidir con Performance (conciliación de identidad). |
+| Contrato, Orden de Compra, Contratista, Serie PMD | ID/DIM | Debe coincidir con Performance (conciliación de identidad). |
 | STE / PMO (supervisión) | DIM | Empresa supervisora (en este OPR: una consultora de gestión). Entidad nueva. |
 | Responsable (SIAP) | DIM | Debe resolver al mismo responsable que Performance. |
 | Fecha, semana actual del contrato | CAP | Ver §2.2. |
@@ -264,7 +266,7 @@ Severidad: **B** = bloquea la publicación; **A** = advertencia que exige justif
 |---|---|---|---|
 | Q-01 | Estructura reconocida (hojas, tabla y encabezados por nombre) | B | Columnas extra el 16-sep |
 | Q-02 | Una sola fila por (aeropuerto, OC) en el corte | B | — |
-| Q-03 | Contrato ACTIVO sin OC: bloquea. Línea TERMINADA sin OC: advertencia (hoy 3 líneas persisten sin OC en todos los cortes; se propone asignarles un ID de línea). Línea en PLANEACIÓN sin OC: informativa | B / A / I | 3 líneas TERMINADO sin OC; 17 líneas PLANEACIÓN el 27-may |
+| Q-03 | Contrato ACTIVO sin OC: bloquea. Línea TERMINADA sin OC: advertencia (hoy 3 líneas persisten sin OC en todos los cortes; se asignará un ID de línea). Línea en PLANEACIÓN sin OC: informativa | B / A / I | 3 líneas TERMINADO sin OC; 17 líneas PLANEACIÓN el 27-may |
 | Q-04 | Estatus dentro de la lista cerrada; todo cambio exige confirmación con motivo escrito de quien carga | B | 2 contratos ACTIVO → TERMINADO → ACTIVO (solo el 23-sep) |
 | Q-05 | Un contrato TERMINADO no puede volver a ACTIVO sin confirmación y motivo | B | Ídem |
 | Q-06 | Días en proceso ≥ 0 | B | −177 y −4 |
@@ -276,8 +278,8 @@ Severidad: **B** = bloquea la publicación; **A** = advertencia que exige justif
 | Q-12 | Performance vs OPR: PV, EV, E, facturado, convenios y fechas deben coincidir | A | **Diferida** hasta que se cargue el OPR. Mientras tanto: los convenios de Performance no coinciden con la hoja ODC en 7/31 contratos |
 | Q-13 | Valores redondos exactos o repetidos en EV/PV/E semanal | A | EV = $5,000,000 en la semana 59 |
 | Q-14 | EV, Estimado y Facturado acumulados no decrecen entre cortes (advertencia). Si baja el PV acumulado se clasifica como **reprogramación** (informativa) | A / I | EV: 2 casos; Estimado: 1; Facturado: 1; **PV: 11 casos** (hasta −$29.9 M) en 6 cortes |
-| Q-15 | Campos maestros y contractuales estables (base, contratado, proveedor, responsable, plazo, AIR, % anticipo): un cambio muestra valor anterior y nuevo | A | Proveedor, responsable, base y contratado: 0 cambios en 4 meses. Plazo: 3 contratos; AIR: 2; % anticipo: 1 |
-| Q-16 | Proveedor y responsable resueltos al catálogo | A | 31 valores, 28 distintos |
+| Q-15 | Campos maestros y contractuales estables (base, contratado, contratista, responsable, plazo, AIR, % anticipo): un cambio muestra valor anterior y nuevo | A | Contratista, responsable, base y contratado: 0 cambios en 4 meses. Plazo: 3 contratos; AIR: 2; % anticipo: 1 |
+| Q-16 | Contratista y responsable resueltos al catálogo | A | 31 valores, 28 distintos |
 | Q-17 | OPR recibido para cada contrato ACTIVO | A | **Diferida** (no aplica en Fase 1) |
 | Q-18 | La fecha de corte indicada es jueves y no existe otro corte vigente en esa fecha | B | Tres fechas distintas en los archivos |
 | Q-26 | Contrato nuevo respecto al corte anterior: confirmar que no es alias de otro | A | Ningún alta en los 6 cortes |
@@ -328,7 +330,7 @@ Las fórmulas son **definiciones conceptuales** para acordar con la PMO; aún no
 | Performance (F-074) | **V1** (27-may, 10-jun): encabezado en fila 2, 117 encabezados, faltan 5 columnas (`$ Facturado Programado`, `% FP`, `$ Por Facturar`, `$ OENE Por Facturar`, `$ Desviación Por Facturar`) y trae `Ajuste en Desviación` vacía. **V2** (09-sep, 16-sep): fila 3, 123 encabezados, con `Required Effort` y `Effort Increse2` y una hoja oculta extra. **V3** (23-sep, 30-sep): fila 3, 121 encabezados, la vigente | Cada corte puede traer una versión distinta; las columnas faltantes en V1 se rellenan con "sin dato" | Firma por conjunto de encabezados y mapa por versión; registrar una "huella de plantilla" por carga |
 | OPR (F-036) | Rev.02 | Una sola muestra | Mismo mecanismo; pedir 3 a 5 OPR de contratos y semanas distintas |
 
-**Cambios recomendados a las plantillas** (los acordados hasta ahora): número de versión visible, ID de línea, ID de riesgo, estatus con lista cerrada y corregida (sin `EN EJECUCIÓN`), validación en `Facturas`, catálogos para proveedor y responsable, y corrección de las fórmulas de KPI que tratan ACTIVO como "SIN INICIAR".
+**Cambios recomendados a las plantillas** (los acordados hasta ahora): número de versión visible, ID de línea, ID de riesgo, estatus con lista cerrada y corregida (sin `EN EJECUCIÓN`), validación en `Facturas`, catálogos para contratista y responsable, y corrección de las fórmulas de KPI que tratan ACTIVO como "SIN INICIAR".
 
 ---
 
@@ -391,3 +393,7 @@ Respuestas de la PMO del 02-oct-2026:
 | D-16 | "Contrato crítico" queda como está en D-05, sin niveles de gravedad | 02-oct-2026 | Una sola categoría; el orden de la lista de atención usa criterios cumplidos y SPI, sin etiquetarlos |
 | D-17 | Umbrales de cambio entre cortes: SPI ±0.05, OENE ±1.5 puntos porcentuales, fin previsto ±14 días | 02-oct-2026 | Aprobados como razonables; se reajustan si el uso real muestra ruido |
 | D-18 | La validación del Performance corre en el navegador de quien carga y se confirma con motivo escrito; sin cuentas, la plataforma no registra quién carga | 02-oct-2026 | Prototipo de Cargas y Calidad |
+| D-19 | Las advertencias recurrentes (contratos terminados sin acta y holgura vacía) se mantienen como advertencias, sin arrastrar justificaciones entre cortes | 02-oct-2026 | Se justifican en cada carga |
+| D-20 | En la plataforma, "Proveedores" son **Contratistas**: es el término oficial en pantallas, métricas y documentos | 02-oct-2026 | Se conserva "Proveedor (Nombre Comercial)" solo como nombre de la columna de origen en el Excel |
+| D-21 | Se aceptan los cambios al diccionario Q-03 (separado por estatus) y Q-26 (contrato nuevo) | 02-oct-2026 | Reglas vigentes |
+| D-22 | La Fase 1 queda cerrada | 02-oct-2026 | Pasan a la Fase 2 la instalación de la herramienta BI y los cambios de plantilla de la sección 14 |
